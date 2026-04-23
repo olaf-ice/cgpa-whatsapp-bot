@@ -44,7 +44,9 @@ const PHASE = {
     AWAITING_DEPARTMENT: 'awaiting_department',
     AWAITING_LEVEL:      'awaiting_level',
     AWAITING_EMAIL:      'awaiting_email',
-    REGISTERED:          'registered'
+    REGISTERED:          'registered',
+    AWAITING_SEM_TYPE:   'awaiting_sem_type',
+    AWAITING_SEM_COUNT:  'awaiting_sem_count'
 };
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
@@ -86,7 +88,8 @@ function getUserState(phone) {
             lastActivity:    0,
             remainingCalc:   0,
             lockedUntil:     0,
-            semesters:       []
+            semesters:       [],
+            semCtx:          { type: null, expectedCount: null }
         });
     }
     const s = userStates.get(phone);
@@ -95,9 +98,10 @@ function getUserState(phone) {
     if (!s.profile)        s.profile        = { name: null, matric: null, faculty: null, department: null, level: null, email: null };
     if (!s.profile.email)  s.profile.email  = null;
     if (!s.semesters)      s.semesters      = [];
+    if (!s.semCtx)         s.semCtx         = { type: null, expectedCount: null };
     if (s.freeCheckUsed === undefined) s.freeCheckUsed = true;  // old users keep full access
-    if (s.isPaid       === undefined) s.isPaid         = true;  // old users keep full access
-    if (s.paidUntil    === undefined) s.paidUntil      = 0;
+    if (s.isPaid       === undefined)  s.isPaid        = true;  // old users keep full access
+    if (s.paidUntil    === undefined)  s.paidUntil     = 0;
     return s;
 }
 
@@ -502,12 +506,57 @@ app.post("/webhook", async (req, res) => {
             if (!paid) return send(twiml, res, upgradePrompt());
             if (state.semesters.length === 0)
                 return send(twiml, res,
-                    "📭 No semesters recorded yet.\n\nSend your courses:\nGST101 A 3, MTH102 B 4"
+                    "📭 No semesters recorded yet.\n\nSend *NEW* to start your first semester entry."
                 );
             const cum = computeCumulativeCGPA(state.semesters);
+            const semLines = state.semesters.map((s, i) =>
+                `  ${i + 1}. ${s.semType || 'Semester'} — CGPA: ${(s.totalPoints / s.totalUnits).toFixed(2)} (${s.registeredCount || s.totalUnits} courses)`
+            ).join('\n');
             return send(twiml, res,
-                `📈 *Cumulative CGPA* across ${state.semesters.length} semester(s): *${cum}* 🎓\n\n` +
-                "Send RESET to clear, or send a new semester's courses."
+                `📈 *Cumulative CGPA: ${cum}* 🎓\n\n` +
+                `*Semester Breakdown:*\n${semLines}\n\n` +
+                "Send *NEW* for a new semester, or RESET to clear all."
+            );
+        }
+
+        // ── NEW SEMESTER trigger ──────────────────────────────────────────────
+        if (upper === 'NEW' || upper === 'NEW SEMESTER') {
+            if (!paid) return send(twiml, res, upgradePrompt());
+            state.semCtx = { type: null, expectedCount: null };
+            state.phase  = PHASE.AWAITING_SEM_TYPE;
+            saveState();
+            return send(twiml, res,
+                `📅 *New Semester Entry*\n\n` +
+                `Which semester is this?\n\nReply with:\n*First* or *Second*`
+            );
+        }
+
+        // ── Semester setup phases ────────────────────────────────────────────
+        if (state.phase === PHASE.AWAITING_SEM_TYPE) {
+            const t = upper.replace(/\s+/g, '');
+            if (!['FIRST','1','SECOND','2','1ST','2ND'].includes(t))
+                return send(twiml, res, "❌ Please reply with *First* or *Second*:");
+            state.semCtx.type = (t === 'FIRST' || t === '1' || t === '1ST') ? 'First Semester' : 'Second Semester';
+            state.phase = PHASE.AWAITING_SEM_COUNT;
+            saveState();
+            return send(twiml, res,
+                `✅ *${state.semCtx.type}*\n\n` +
+                `How many courses did you *register* for this semester?\n_(Enter a number, e.g. 6)_`
+            );
+        }
+
+        if (state.phase === PHASE.AWAITING_SEM_COUNT) {
+            const count = parseInt(msg, 10);
+            if (isNaN(count) || count < 1 || count > 25)
+                return send(twiml, res, "❌ Enter a valid number of courses (1–25):");
+            state.semCtx.expectedCount = count;
+            state.phase = PHASE.REGISTERED;
+            saveState();
+            return send(twiml, res,
+                `✅ Got it — *${count} courses* registered for *${state.semCtx.type}*.\n\n` +
+                `Now send all ${count} courses (comma-separated):\n\n` +
+                `_Introduction to Programming 72 3, General Studies 65 2, ..._\n\n` +
+                `*Format:* COURSE NAME SCORE UNIT`
             );
         }
 
@@ -533,7 +582,18 @@ app.post("/webhook", async (req, res) => {
                 "Use: *COURSE TITLE SCORE UNIT*\n" +
                 "Example: Introduction to Programming 72 3\n\n" +
                 "Multiple: GST 111 68 3, MTH 101 55 4\n\n" +
-                "Type HELP for more info."
+                "Send *NEW* to start a semester entry, or HELP for info."
+            );
+        }
+
+        // ── Paid users: require semester context before accepting courses ──────
+        if (paid && !state.semCtx.expectedCount) {
+            state.semCtx = { type: null, expectedCount: null };
+            state.phase  = PHASE.AWAITING_SEM_TYPE;
+            saveState();
+            return send(twiml, res,
+                `📅 Let's log this semester properly first!\n\n` +
+                `Which semester is this?\n\nReply with *First* or *Second*`
             );
         }
 
@@ -586,16 +646,34 @@ app.post("/webhook", async (req, res) => {
                 "This account is for one student only. Wait 24 hours."
             );
         } else {
-            state.semesters.push({ totalPoints: result.totalPoints, totalUnits: result.totalUnits, timestamp: now });
+            // Check course count vs declared (warn if mismatch)
+            const declared = state.semCtx.expectedCount;
+            const submitted = valid.length;
+            let countNote = '';
+            if (declared && submitted !== declared)
+                countNote = `⚠️ You declared *${declared} courses* but submitted *${submitted}*. Calculating with ${submitted}.\n\n`;
+
+            const semLabel = state.semCtx.type || 'Semester';
+            state.semesters.push({
+                totalPoints:     result.totalPoints,
+                totalUnits:      result.totalUnits,
+                timestamp:       now,
+                semType:         semLabel,
+                registeredCount: declared || submitted
+            });
+
+            // Clear semester context after saving
+            state.semCtx = { type: null, expectedCount: null };
+
             const semCount = state.semesters.length;
             const cum      = computeCumulativeCGPA(state.semesters);
 
-            let prefix = '';
+            let prefix = countNote;
             if (state.warningCount === 1 && (diffRec || tooFast))
-                prefix = "⚠️ This looks like a different record. This bot is for one student only.\n\n";
+                prefix += "⚠️ This looks like a different record. This bot is for one student only.\n\n";
             else if (state.warningCount === 2) {
                 if (state.remainingCalc <= 0) state.remainingCalc = 1;
-                prefix = "⚠️ Multiple records detected. 1 calculation left before access is restricted.\n\n";
+                prefix += "⚠️ Multiple records detected. 1 calculation left before access is restricted.\n\n";
                 state.remainingCalc--;
             }
 
@@ -605,16 +683,16 @@ app.post("/webhook", async (req, res) => {
 
             if (semCount === 1) {
                 send(twiml, res,
-                    `${prefix}📊 *Semester CGPA: ${result.cgpa}* 🎯\n\n` +
+                    `${prefix}📊 *${semLabel} CGPA: ${result.cgpa}* 🎯\n\n` +
                     `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
-                    "Send another semester to track your cumulative CGPA, or type HELP."
+                    "Send *NEW* to log another semester, or CUMULATIVE to see overall."
                 );
             } else {
                 send(twiml, res,
-                    `${prefix}📊 *Semester CGPA: ${result.cgpa}* 🎯\n` +
+                    `${prefix}📊 *${semLabel} CGPA: ${result.cgpa}* 🎯\n` +
                     `📈 *Cumulative CGPA: ${cum}* (${semCount} semesters)\n\n` +
                     `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
-                    "Type CUMULATIVE to view overall, RESET to clear."
+                    "Send *NEW* for next semester, CUMULATIVE to view all, RESET to clear."
                 );
             }
         }
