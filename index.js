@@ -18,6 +18,16 @@ app.use(express.urlencoded({ extended: false }));
 
 const gradeMap = { A: 5, B: 4, C: 3, D: 2, E: 1, F: 0 };
 
+// UI official grading scale (score → grade)
+function scoreToGrade(score) {
+    if (score >= 70) return 'A';
+    if (score >= 60) return 'B';
+    if (score >= 50) return 'C';
+    if (score >= 45) return 'D';
+    if (score >= 40) return 'E';
+    return 'F';
+}
+
 const CONTROL_WINDOW_MS = 2 * 60 * 1000;
 const LOCK_DURATION_MS  = 24 * 60 * 60 * 1000;
 const SEMESTER_MS       = 90 * 24 * 60 * 60 * 1000; // 3 months
@@ -99,14 +109,33 @@ function parseCourses(message) {
     return message.split(",")
         .map(p => p.trim()).filter(Boolean)
         .map(p => {
-            const parts = p.split(/\s+/);
+            const parts = p.trim().split(/\s+/);
+            // Need at least: one title word + score/grade + unit = 3 tokens min
             if (parts.length < 3) return null;
-            const code  = parts[0].toUpperCase();
-            const grade = parts[1].toUpperCase();
-            const unit  = parseInt(parts[2], 10);
-            if (!code || !grade || isNaN(unit) || unit <= 0) return null;
-            if (!(grade in gradeMap)) return { code, grade, unit, invalid: true };
-            return { code, grade, unit, invalid: false };
+
+            const unit = parseInt(parts[parts.length - 1], 10);
+            if (isNaN(unit) || unit <= 0) return null;
+
+            const scoreOrGrade = parts[parts.length - 2].toUpperCase();
+            const title = parts.slice(0, parts.length - 2).join(' ').toUpperCase() || scoreOrGrade;
+
+            // Determine grade — accept numeric score OR letter grade
+            let grade;
+            let score = null;
+
+            if (/^\d+(\.\d+)?$/.test(scoreOrGrade)) {
+                // Numeric score (e.g. 72)
+                score = parseFloat(scoreOrGrade);
+                if (score < 0 || score > 100) return { title, grade: null, unit, score, invalid: true };
+                grade = scoreToGrade(score);
+            } else if (scoreOrGrade in gradeMap) {
+                // Letter grade (e.g. A, B)
+                grade = scoreOrGrade;
+            } else {
+                return { title, grade: scoreOrGrade, unit, score, invalid: true };
+            }
+
+            return { title, grade, score, unit, invalid: false };
         }).filter(Boolean);
 }
 
@@ -115,7 +144,11 @@ function computeCGPA(courses) {
     const tp    = valid.reduce((s, c) => s + gradeMap[c.grade] * c.unit, 0);
     const tu    = valid.reduce((s, c) => s + c.unit, 0);
     if (tu === 0) return null;
-    return { cgpa: (tp / tu).toFixed(2), totalUnits: tu, totalPoints: tp };
+    // Build breakdown for display
+    const breakdown = valid.map(c =>
+        `  ${c.title} — ${c.score !== null && c.score !== undefined ? c.score + '%→' : ''}${c.grade} (${c.unit} units)`
+    ).join('\n');
+    return { cgpa: (tp / tu).toFixed(2), totalUnits: tu, totalPoints: tp, breakdown };
 }
 
 function computeCumulativeCGPA(semesters) {
@@ -126,14 +159,14 @@ function computeCumulativeCGPA(semesters) {
 
 function isDifferentRecord(previous, current) {
     if (!previous || previous.length === 0 || current.length === 0) return false;
-    const prevCodes = new Set(previous.map(c => c.code));
-    const currCodes = new Set(current.map(c => c.code));
-    const prevMap   = Object.fromEntries(previous.map(c => [c.code, c]));
-    const added   = [...currCodes].filter(x => !prevCodes.has(x)).length;
-    const removed = [...prevCodes].filter(x => !currCodes.has(x)).length;
+    const prevTitles = new Set(previous.map(c => c.title));
+    const currTitles = new Set(current.map(c => c.title));
+    const prevMap    = Object.fromEntries(previous.map(c => [c.title, c]));
+    const added   = [...currTitles].filter(x => !prevTitles.has(x)).length;
+    const removed = [...prevTitles].filter(x => !currTitles.has(x)).length;
     let changed = 0;
     current.forEach(c => {
-        const p = prevMap[c.code];
+        const p = prevMap[c.title];
         if (p && (p.grade !== c.grade || p.unit !== c.unit)) changed++;
     });
     const unitDiff = Math.abs(
@@ -382,14 +415,19 @@ app.post("/webhook", async (req, res) => {
                 : "• PAY / UPGRADE — unlock full access (₦1,000/semester)\n• PROFILE — view your registration details\n";
             return send(twiml, res,
                 "📚 *CGPA Bot Help*\n\n" +
-                "*Format:* CODE GRADE UNIT, CODE GRADE UNIT\n" +
-                "*Example:* GST101 A 3, MTH102 B 4\n\n" +
+                "*Format:* COURSE TITLE SCORE UNIT\n" +
+                "*Example:* Introduction to Programming 72 3\n" +
+                "_(Separate multiple courses with a comma)_\n\n" +
+                "*Multi-course example:*\n" +
+                "GST 111 68 3, MTH 101 55 4, ENG 101 47 2\n\n" +
                 "*Commands:*\n" +
                 paidCmds +
                 "• STATUS — check subscription status\n" +
                 "• REGISTER — update registration info\n" +
                 "• HELP — show this message\n\n" +
-                "*Grades:* A=5.0  B=4.0  C=3.0  D=2.0  E=1.0  F=0.0"
+                "*UI Grading Scale:*\n" +
+                "70-100=A(5.0)  60-69=B(4.0)  50-59=C(3.0)\n" +
+                "45-49=D(2.0)  40-44=E(1.0)  0-39=F(0.0)"
             );
         }
 
@@ -482,16 +520,19 @@ app.post("/webhook", async (req, res) => {
 
         if (!hasValid && invalid.length > 0) {
             return send(twiml, res,
-                `❌ Unknown grade(s) for: *${invalid.map(c => c.code).join(', ')}*\n` +
-                "Valid grades: A, B, C, D, E, F\n\nFormat: GST101 A 3, MTH102 B 4"
+                `❌ Could not read score/grade for: *${invalid.map(c => c.title).join(', ')}*\n\n` +
+                "Make sure each course ends with a *score (0-100)* and *unit*:\n" +
+                "_Introduction to Programming 72 3_\n" +
+                "_GST 111 68 3, MTH 101 55 4_"
             );
         }
 
         if (!hasValid) {
             return send(twiml, res,
                 "❌ Invalid format.\n\n" +
-                "Use: CODE GRADE UNIT, CODE GRADE UNIT\n" +
-                "Example: GST101 A 3, MTH102 B 4\n\n" +
+                "Use: *COURSE TITLE SCORE UNIT*\n" +
+                "Example: Introduction to Programming 72 3\n\n" +
+                "Multiple: GST 111 68 3, MTH 101 55 4\n\n" +
                 "Type HELP for more info."
             );
         }
@@ -511,13 +552,14 @@ app.post("/webhook", async (req, res) => {
 
             let suffix = '';
             if (invalid.length > 0)
-                suffix = `\n\n⚠️ Skipped unknown grade(s): ${invalid.map(c => c.code).join(', ')}`;
+                suffix = `\n\n⚠️ Skipped: ${invalid.map(c => c.title).join(', ')}`;
 
             return send(twiml, res,
-                `📊 *Your CGPA: ${result.cgpa}* 🎯${suffix}\n\n` +
+                `📊 *Your CGPA: ${result.cgpa}* 🎯\n\n` +
+                `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
                 `─────────────────────\n` +
                 `🆓 That was your *free check*.\n\n` +
-                `To track multiple semesters & get cumulative CGPA, upgrade for *₦1,000/semester*.\n\n` +
+                `To track multiple semesters & cumulative CGPA, upgrade for *₦1,000/semester*.\n\n` +
                 `👉 Send *PAY* to unlock full access.`
             );
         }
@@ -559,17 +601,19 @@ app.post("/webhook", async (req, res) => {
 
             let suffix = '';
             if (invalid.length > 0)
-                suffix = `\n\n⚠️ Skipped unknown grade(s): ${invalid.map(c => c.code).join(', ')}`;
+                suffix = `\n\n⚠️ Skipped: ${invalid.map(c => c.title).join(', ')}`;
 
             if (semCount === 1) {
                 send(twiml, res,
-                    `${prefix}📊 Semester CGPA: *${result.cgpa}* 🎯${suffix}\n\n` +
+                    `${prefix}📊 *Semester CGPA: ${result.cgpa}* 🎯\n\n` +
+                    `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
                     "Send another semester to track your cumulative CGPA, or type HELP."
                 );
             } else {
                 send(twiml, res,
-                    `${prefix}📊 Semester CGPA: *${result.cgpa}* 🎯\n` +
-                    `📈 Cumulative CGPA: *${cum}* (${semCount} semesters)${suffix}\n\n` +
+                    `${prefix}📊 *Semester CGPA: ${result.cgpa}* 🎯\n` +
+                    `📈 *Cumulative CGPA: ${cum}* (${semCount} semesters)\n\n` +
+                    `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
                     "Type CUMULATIVE to view overall, RESET to clear."
                 );
             }
