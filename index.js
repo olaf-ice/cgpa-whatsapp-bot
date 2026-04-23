@@ -6,6 +6,9 @@ const path = require('path');
 
 const app = express();
 
+// Trust Render's reverse proxy (required for correct IP/protocol detection)
+app.set('trust proxy', 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -149,7 +152,7 @@ function resetAbuse(state) {
 // ─── Routes ─────────────────────────────────────────────────────────────────
 
 app.get("/", (req, res) => {
-    res.send("CGPA Bot Backend is live 🚀");
+    res.json({ status: "ok", service: "CGPA WhatsApp Bot", uptime: process.uptime() });
 });
 
 /**
@@ -369,6 +372,16 @@ app.post("/webhook", (req, res) => {
 // ─── Start ───────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+// Graceful shutdown (Render sends SIGTERM before stopping the container)
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received — shutting down gracefully');
+    saveState();
+    server.close(() => {
+        console.log('Server closed.');
+        process.exit(0);
+    });
 });
