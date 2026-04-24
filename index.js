@@ -330,32 +330,55 @@ app.post("/webhook", async (req, res) => {
         }
 
         if (state.phase === PHASE.AWAITING_NAME) {
-            if (msg.length < 2)
-                return send(twiml, res, "❌ Name too short. Enter your *Full Name*:");
-            state.profile.name = msg;
+            const nameRegex = /^[a-zA-Z\s''-]{2,}$/;
+            const wordCount  = msg.trim().split(/\s+/).length;
+            if (!nameRegex.test(msg))
+                return send(twiml, res,
+                    "❌ Name should contain *letters only* (no numbers or symbols).\n\nEnter your *Full Name*:"
+                );
+            if (wordCount < 2)
+                return send(twiml, res,
+                    "❌ Please enter your *full name* (first and last name):\n_e.g. John Adebayo_"
+                );
+            state.profile.name = msg.trim();
             state.phase = PHASE.AWAITING_MATRIC;
             saveState();
             return send(twiml, res,
-                `✅ Got it, *${msg}*!\n\n` +
+                `✅ Got it, *${msg.trim()}*!\n\n` +
                 "🎓 Enter your *Matric Number*:\n_(e.g. 23/0001 or 2023/12345)_"
             );
         }
 
         if (state.phase === PHASE.AWAITING_MATRIC) {
-            if (msg.length < 3)
-                return send(twiml, res, "❌ Invalid. Enter your *Matric Number*:");
+            // Must contain at least one digit and at least one slash or hyphen
+            const matricRegex = /^[A-Za-z0-9\/\-\_\.]{3,20}$/;
+            const hasDigit    = /\d/.test(msg);
+            const hasSlash    = /[\/\-]/.test(msg);
+            if (!matricRegex.test(msg) || !hasDigit)
+                return send(twiml, res,
+                    "❌ That doesn't look like a valid matric number.\n" +
+                    "It should contain numbers, e.g. *23/0001* or *2023/12345*\n\nTry again:"
+                );
+            if (!hasSlash)
+                return send(twiml, res,
+                    "❌ Matric number should include a slash, e.g. *23/0001*\n\nTry again:"
+                );
             state.profile.matric = msg.toUpperCase();
             state.phase = PHASE.AWAITING_FACULTY;
             saveState();
             return send(twiml, res,
-                "✅ Noted!\n\n🏛️ Enter your *Faculty*:\n_(e.g. Science, Arts, Social Sciences, Education, Law)_"
+                "✅ Noted!\n\n🏗️ Enter your *Faculty*:\n_(e.g. Science, Arts, Social Sciences, Education, Law)_"
             );
         }
 
         if (state.phase === PHASE.AWAITING_FACULTY) {
-            if (msg.length < 2)
-                return send(twiml, res, "❌ Enter a valid *Faculty* name:");
-            state.profile.faculty = msg;
+            const lettersOnly = /^[a-zA-Z\s]{2,}$/;
+            if (!lettersOnly.test(msg))
+                return send(twiml, res,
+                    "❌ Faculty name should contain *letters only* (no numbers).\n" +
+                    "e.g. *Science*, *Arts*, *Social Sciences*\n\nEnter your *Faculty*:"
+                );
+            state.profile.faculty = msg.trim();
             state.phase = PHASE.AWAITING_DEPARTMENT;
             saveState();
             return send(twiml, res,
@@ -364,9 +387,13 @@ app.post("/webhook", async (req, res) => {
         }
 
         if (state.phase === PHASE.AWAITING_DEPARTMENT) {
-            if (msg.length < 2)
-                return send(twiml, res, "❌ Enter a valid *Department* name:");
-            state.profile.department = msg;
+            const lettersOnly = /^[a-zA-Z\s]{2,}$/;
+            if (!lettersOnly.test(msg))
+                return send(twiml, res,
+                    "❌ Department name should contain *letters only* (no numbers).\n" +
+                    "e.g. *Computer Science*, *Mathematics*\n\nEnter your *Department*:"
+                );
+            state.profile.department = msg.trim();
             state.phase = PHASE.AWAITING_LEVEL;
             saveState();
             return send(twiml, res,
@@ -389,9 +416,13 @@ app.post("/webhook", async (req, res) => {
         }
 
         if (state.phase === PHASE.AWAITING_EMAIL) {
-            if (!msg.includes('@') || !msg.includes('.'))
-                return send(twiml, res, "❌ Enter a valid *Email Address*:");
-            state.profile.email = msg.toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+            if (!emailRegex.test(msg))
+                return send(twiml, res,
+                    "❌ That doesn't look like a valid email address.\n" +
+                    "e.g. *johndoe@gmail.com*\n\nEnter your *Email Address*:"
+                );
+            state.profile.email = msg.toLowerCase().trim();
             state.phase = PHASE.REGISTERED;
             saveState();
             return send(twiml, res,
@@ -401,7 +432,7 @@ app.post("/webhook", async (req, res) => {
                 `─────────────────────\n` +
                 `🆓 You have *1 free CGPA calculation*.\n\n` +
                 `📌 Send your courses to try it:\n` +
-                `*GST101 A 3, MTH102 B 4*\n\n` +
+                `*GST101 72 3, MTH102 55 4*\n\n` +
                 `Type *HELP* to see all commands.`
             );
         }
