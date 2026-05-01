@@ -31,10 +31,11 @@ const LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
 const AMOUNT_NGN = 1000;
 const STATE_FILE = path.join(__dirname, 'state.json');
 const VALID_LEVELS = ['100', '200', '300', '400', '500', '600', '700'];
-const MONNIFY_API_KEY      = process.env.MONNIFY_API_KEY      || '';
-const MONNIFY_SECRET_KEY   = process.env.MONNIFY_SECRET_KEY   || '';
+const MONNIFY_API_KEY       = process.env.MONNIFY_API_KEY       || '';
+const MONNIFY_SECRET_KEY    = process.env.MONNIFY_SECRET_KEY    || '';
 const MONNIFY_CONTRACT_CODE = process.env.MONNIFY_CONTRACT_CODE || '';
-const MONNIFY_BASE_URL     = 'https://api.monnify.com';
+// Use MONNIFY_BASE_URL=https://api.monnify.com in Render env when going live
+const MONNIFY_BASE_URL      = process.env.MONNIFY_BASE_URL      || 'https://sandbox.monnify.com';
 
 // ─── Meta WhatsApp Cloud API Config ──────────────────────────────────────────
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
