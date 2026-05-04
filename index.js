@@ -1,5 +1,4 @@
 const express = require('express');
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -41,6 +40,10 @@ const MONNIFY_BASE_URL      = process.env.MONNIFY_BASE_URL      || 'https://sand
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
 const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || '';
 const META_VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || '';
+
+// ─── Sendchamp Config ─────────────────────────────────────────────────────────
+const SENDCHAMP_API_KEY   = process.env.SENDCHAMP_API_KEY   || '';
+const SENDCHAMP_SENDER_ID = process.env.SENDCHAMP_SENDER_ID || ''; // Your WhatsApp number e.g. 2348012345678
 
 const PHASE = {
     UNREGISTERED: 'unregistered',
@@ -221,11 +224,32 @@ function upgradePrompt() {
     );
 }
 
-function sendTwilio(res, text) {
-    const twiml = new MessagingResponse();
-    twiml.message(text);
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    return res.end(twiml.toString());
+async function sendSendchamp(to, text) {
+    if (!SENDCHAMP_API_KEY || !SENDCHAMP_SENDER_ID) {
+        console.error('Sendchamp credentials not configured');
+        return false;
+    }
+    try {
+        await axios.post(
+            'https://api.sendchamp.com/api/v1/whatsapp/message/send',
+            {
+                sender:  SENDCHAMP_SENDER_ID,
+                to:      to,
+                type:    'text',
+                message: text
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${SENDCHAMP_API_KEY}`,
+                    'Content-Type':  'application/json'
+                }
+            }
+        );
+        return true;
+    } catch (err) {
+        console.error('Sendchamp send error:', err.response?.data || err.message);
+        return false;
+    }
 }
 
 async function getMonnifyToken() {
@@ -737,27 +761,36 @@ app.post('/monnify-webhook', async (req, res) => {
             state.paidUntil = Date.now() + 120 * 24 * 60 * 60 * 1000; // 120 days (~1 semester)
             saveState();
             console.log(`✅ Monnify payment confirmed for ${phone}`);
-            if (META_ACCESS_TOKEN && META_PHONE_NUMBER_ID) {
-                await sendMetaMessage(phone,
-                    `✅ *Payment Confirmed!*\n\nAccess active until *${new Date(state.paidUntil).toDateString()}*.\n\nSend *NEW* to start your first semester. 🎓`
-                );
+            // Notify via Sendchamp (primary) or Meta (fallback)
+            const paymentMsg = `✅ *Payment Confirmed!*\n\nAccess active until *${new Date(state.paidUntil).toDateString()}*.\n\nSend *NEW* to start your first semester. 🎓`;
+            if (SENDCHAMP_API_KEY && SENDCHAMP_SENDER_ID) {
+                await sendSendchamp(phone, paymentMsg);
+            } else if (META_ACCESS_TOKEN && META_PHONE_NUMBER_ID) {
+                await sendMetaMessage(phone, paymentMsg);
             }
         }
     }
     res.sendStatus(200);
 });
 
-// ─── Twilio Webhook ───────────────────────────────────────────────────────────
+// ─── Sendchamp Webhook ────────────────────────────────────────────────────────
 
-app.post('/twilio-webhook', async (req, res) => {
+app.post('/sendchamp-webhook', async (req, res) => {
+    // Acknowledge immediately
+    res.sendStatus(200);
     try {
-        const from  = (req.body.From || '').replace('whatsapp:', '');
-        const msg   = (req.body.Body || '').trim();
+        const data = req.body?.data || req.body;
+        // Sendchamp sends phone_number and message (text string or object)
+        const from = (data.phone_number || data.from || '').replace(/^\+/, '');
+        const msg  = (typeof data.message === 'string'
+            ? data.message
+            : data.message?.text || data.text || '').trim();
+        if (!from || !msg) return;
+        console.log(`[Sendchamp] from=${from} msg=${msg}`);
         const reply = await handleBotMessage(from, msg);
-        sendTwilio(res, reply || '');
+        if (reply) await sendSendchamp(from, reply);
     } catch (err) {
-        console.error('Twilio webhook error:', err);
-        res.sendStatus(500);
+        console.error('Sendchamp webhook error:', err);
     }
 });
 
