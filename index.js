@@ -779,14 +779,40 @@ app.post('/sendchamp-webhook', async (req, res) => {
     // Acknowledge immediately
     res.sendStatus(200);
     try {
-        const data = req.body?.data || req.body;
-        // Sendchamp sends phone_number and message (text string or object)
-        const from = (data.phone_number || data.from || '').replace(/^\+/, '');
-        const msg  = (typeof data.message === 'string'
-            ? data.message
-            : data.message?.text || data.text || '').trim();
-        if (!from || !msg) return;
+        // Log the full raw payload so we can see exactly what Sendchamp sends
+        console.log('[Sendchamp RAW]', JSON.stringify(req.body, null, 2));
+
+        const body = req.body || {};
+        const data = body.data || body;
+
+        // Handle all known Sendchamp webhook payload formats
+        const from = (
+            data.phone_number  ||   // format 1
+            data.from          ||   // format 2
+            data.sender        ||   // format 3
+            body.phone_number  ||
+            body.from          ||
+            ''
+        ).toString().replace(/^\+/, '');
+
+        const msg = (
+            (typeof data.message === 'string' ? data.message : null) ||  // format 1
+            data.message?.text  ||   // format 2
+            data.message?.body  ||   // format 3
+            data.body           ||   // format 4
+            data.text           ||   // format 5
+            body.text           ||
+            body.body           ||
+            ''
+        ).toString().trim();
+
         console.log(`[Sendchamp] from=${from} msg=${msg}`);
+
+        if (!from || !msg) {
+            console.log('[Sendchamp] Could not extract from/msg — check RAW log above');
+            return;
+        }
+
         const reply = await handleBotMessage(from, msg);
         if (reply) await sendSendchamp(from, reply);
     } catch (err) {
