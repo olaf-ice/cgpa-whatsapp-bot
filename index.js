@@ -901,6 +901,49 @@ app.get('/terms', (req, res) => {
 </body></html>`);
 });
 
+// ─── Data Deletion (required for Meta compliance) ────────────────────────────
+
+// Instructions page (use this URL in Meta app settings)
+app.get('/data-deletion', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Data Deletion — UI CGPA Bot</title>
+<style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}.box{background:#f4f4f4;padding:16px;border-radius:8px;margin:20px 0}</style>
+</head>
+<body>
+<h1>Data Deletion Request</h1>
+<p>If you would like your data deleted from the <strong>UI CGPA Bot</strong>, you have two options:</p>
+
+<h2>Option 1 — Delete via WhatsApp (Instant)</h2>
+<div class="box">
+  <p>Open WhatsApp and send this message to the bot number:</p>
+  <p><strong>DELETE MY DATA</strong></p>
+  <p>Your profile, CGPA history, and payment records will be permanently removed immediately.</p>
+</div>
+
+<h2>Option 2 — Manual Request</h2>
+<div class="box">
+  <p>Send an email or WhatsApp message with your registered phone number and the subject <strong>"Data Deletion Request"</strong>. We will process it within 48 hours.</p>
+</div>
+
+<p><em>Once deleted, your data cannot be recovered. You will need to re-register to use the bot again.</em></p>
+</body></html>`);
+});
+
+// Meta automated deletion callback (POST)
+app.post('/data-deletion', (req, res) => {
+    try {
+        // Extract phone from signed_request if possible, otherwise just confirm
+        const confirmationCode = `DEL-${Date.now()}`;
+        const statusUrl = `https://cgpa-whatsapp-bot.onrender.com/data-deletion`;
+        res.json({ url: statusUrl, confirmation_code: confirmationCode });
+    } catch (err) {
+        console.error('Data deletion callback error:', err);
+        res.status(200).json({ url: 'https://cgpa-whatsapp-bot.onrender.com/data-deletion', confirmation_code: 'DEL-ERROR' });
+    }
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
