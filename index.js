@@ -934,13 +934,39 @@ app.get('/data-deletion', (req, res) => {
 // Meta automated deletion callback (POST)
 app.post('/data-deletion', (req, res) => {
     try {
-        // Extract phone from signed_request if possible, otherwise just confirm
-        const confirmationCode = `DEL-${Date.now()}`;
+        const signedRequest = req.body?.signed_request || '';
+        let userId = null;
+
+        if (signedRequest) {
+            // Meta sends: base64UrlEncode(signature) + '.' + base64UrlEncode(payload)
+            const parts = signedRequest.split('.');
+            if (parts.length === 2) {
+                const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+                userId = decoded?.user_id || null;
+                console.log(`[Meta Deletion] user_id=${userId}`);
+                // Delete matching user state if found
+                if (userId) {
+                    for (const [phone, state] of userStates.entries()) {
+                        if (phone === userId || state?.profile?.email?.includes(userId)) {
+                            userStates.delete(phone);
+                            console.log(`[Meta Deletion] Deleted state for ${phone}`);
+                        }
+                    }
+                    saveState();
+                }
+            }
+        }
+
+        const confirmationCode = `DEL-${userId || Date.now()}`;
         const statusUrl = `https://cgpa-whatsapp-bot.onrender.com/data-deletion`;
         res.json({ url: statusUrl, confirmation_code: confirmationCode });
     } catch (err) {
         console.error('Data deletion callback error:', err);
-        res.status(200).json({ url: 'https://cgpa-whatsapp-bot.onrender.com/data-deletion', confirmation_code: 'DEL-ERROR' });
+        res.status(200).json({
+            url: 'https://cgpa-whatsapp-bot.onrender.com/data-deletion',
+            confirmation_code: `DEL-${Date.now()}`
+        });
     }
 });
 
