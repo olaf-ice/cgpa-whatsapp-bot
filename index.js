@@ -852,6 +852,55 @@ app.post('/meta-webhook', async (req, res) => {
 
 app.get('/', (req, res) => res.send('UI CGPA Bot is running ✅'));
 
+// ─── Privacy Policy & Terms (required for Meta compliance) ───────────────────
+
+app.get('/privacy', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Privacy Policy — UI CGPA Bot</title>
+<style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>Last updated:</strong> ${new Date().toDateString()}</p>
+<p>This Privacy Policy explains how the <strong>UI CGPA Bot</strong> collects, uses, and protects your information when you interact with it via WhatsApp.</p>
+<h2>1. Information We Collect</h2>
+<ul><li>Full name and matric number</li><li>Faculty, department, and level</li><li>Email address</li><li>WhatsApp phone number</li><li>CGPA and semester data you submit</li></ul>
+<h2>2. How We Use Your Information</h2>
+<ul><li>Calculate and track your CGPA</li><li>Process payments via Monnify</li><li>Send payment receipts and bot responses</li></ul>
+<h2>3. Data Storage</h2>
+<p>Your data is stored securely. We do not sell or share your data with third parties except for payment processing.</p>
+<h2>4. Data Deletion</h2>
+<p>You may request deletion of your data at any time by contacting us.</p>
+<h2>5. Contact</h2>
+<p>For privacy concerns, contact us via WhatsApp.</p>
+</body></html>`);
+});
+
+app.get('/terms', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Terms of Service — UI CGPA Bot</title>
+<style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}</style>
+</head>
+<body>
+<h1>Terms of Service</h1>
+<p><strong>Last updated:</strong> ${new Date().toDateString()}</p>
+<h2>1. Eligibility</h2>
+<p>This Bot is for University of Ibadan (UI) students only. Each account must belong to one individual student.</p>
+<h2>2. Acceptable Use</h2>
+<p>You agree not to misuse the Bot, share accounts, or manipulate calculations. Abuse results in account suspension.</p>
+<h2>3. Payments</h2>
+<p>Subscription payments of ₦1,000/semester are non-refundable once access is granted. Access is valid for ~120 days.</p>
+<h2>4. Accuracy</h2>
+<p>CGPA results depend on data you provide. We are not liable for errors from incorrect data entry.</p>
+<h2>5. Changes</h2>
+<p>We may update these terms at any time. Continued use constitutes acceptance.</p>
+</body></html>`);
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
