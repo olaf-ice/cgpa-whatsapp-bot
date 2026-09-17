@@ -87,15 +87,59 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            initializePayment({ onSuccess, onClose } as any)
-          }}
-          disabled={isVerifying}
-          className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70 disabled:cursor-wait"
-        >
-          {isVerifying ? 'Verifying Payment...' : 'Unlock Now - ₦2,000 / Semester'}
-        </button>
+        {/* Payment Options */}
+        <div className="space-y-6">
+          <button
+            onClick={() => {
+              initializePayment({ onSuccess, onClose } as any)
+            }}
+            disabled={isVerifying}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70 disabled:cursor-wait"
+          >
+            {isVerifying ? 'Verifying Payment...' : 'Pay Online (Paystack)'}
+          </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300/50"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-[#f8fafc] text-gray-500 font-medium">OR PAY VIA TRANSFER</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-left">
+            <div className="space-y-3 text-sm text-gray-600 mb-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <span>Bank Name</span>
+                <span className="font-bold text-gray-900">Guaranty Trust Bank (GTB)</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <span>Account Name</span>
+                <span className="font-bold text-gray-900">Your Name Here</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <span>Account Number</span>
+                <span className="font-bold text-gray-900 text-lg tracking-wider">0123456789</span>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span>Amount</span>
+                <span className="font-black text-blue-600 text-lg">₦2,000</span>
+              </div>
+            </div>
+            <a 
+              href={`https://wa.me/234XXXXXXXXXX?text=Hello,%20I%20just%20paid%20for%20the%20CGPA%20Bot.%20My%20email%20is%20${email}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white text-center rounded-xl font-bold transition-all shadow-md shadow-green-500/20"
+            >
+              I have sent the money
+            </a>
+            <p className="text-xs text-gray-400 text-center mt-3">
+              Admin will manually unlock your account after verifying payment.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
