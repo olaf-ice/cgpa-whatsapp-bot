@@ -143,12 +143,12 @@ export default async function DashboardPage() {
     emailRemindersEnabled: student.email_reminders_enabled !== false // defaults to true
   }
 
-  // Sunk Cost Paywall (Temporarily Disabled for Testing)
-  // if (!student.has_paid) {
-  //   if (!student.is_admin) {
-  //     return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
-  //   }
-  // }
+  // Sunk Cost Paywall
+  if (!student.has_paid) {
+    if (!student.is_admin) {
+      return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
+    }
+  }
 
   return <DashboardClient studentData={liveStudentData} />
 }
