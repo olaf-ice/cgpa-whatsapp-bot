@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 
 export async function login(formData: FormData) {
@@ -9,12 +10,14 @@ export async function login(formData: FormData) {
 
   const email = formData.get('email') as string
 
+  const headersList = await headers()
+  const origin = headersList.get('origin') || 'https://cgpa-whatsapp-bot.onrender.com'
+
   // We are using OTP (Magic Link) for simplicity and better UX for students
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      // In production, configure this correctly based on your deployment URL
-      emailRedirectTo: 'http://localhost:3000/auth/callback',
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   })
 
