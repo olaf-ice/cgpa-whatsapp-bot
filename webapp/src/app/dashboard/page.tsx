@@ -130,6 +130,7 @@ export default async function DashboardPage() {
 
   const liveStudentData = {
     name: student.name,
+    matricNumber: student.matric_number,
     institution: student.institution.name,
     courseOfStudy: student.course_of_study,
     scale: student.institution.grading_scale,

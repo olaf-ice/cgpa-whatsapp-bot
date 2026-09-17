@@ -9,6 +9,7 @@ import { savePhoneNumber, toggleEmailReminders } from './actions'
 interface DashboardClientProps {
   studentData: {
     name: string;
+    matricNumber?: string;
     institution: string;
     courseOfStudy?: string;
     scale: number;
@@ -127,7 +128,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
               <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
                 <p className="text-blue-100 font-bold uppercase tracking-widest text-xs mb-2">Departmental Rank</p>
                 <p className="text-4xl font-black text-white">#{studentData.numericRank} <span className="text-xl text-blue-200 font-semibold">/ {studentData.totalPeers}</span></p>
-                <p className="text-blue-200 mt-2 font-medium">{studentData.courseOfStudy}</p>
+                <p className="text-blue-200 mt-2 font-medium">{studentData.courseOfStudy} {studentData.matricNumber && `• ${studentData.matricNumber}`}</p>
               </div>
             </div>
             <div className="flex items-center justify-between border-t border-white/20 pt-6">
@@ -170,6 +171,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Target Planner
           </Link>
+          <Link href="/onboarding" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
+            <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            Edit Profile
+          </Link>
           <Link href="/premium" className="flex items-center gap-3 px-4 py-3 text-amber-600 hover:bg-amber-50 rounded-xl font-medium transition-all group mt-4 border border-amber-100">
             <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Premium
@@ -210,9 +215,14 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
                   Hello, {studentData.name.split(' ')[0]} 👋
                 </h1>
-                <p className="text-gray-500 font-medium">
+                <p className="text-gray-500 font-medium mt-1">
                   {studentData.institution} • {studentData.scale.toFixed(1)} Scale
                 </p>
+                {studentData.matricNumber && (
+                  <p className="text-blue-600 font-bold mt-1 tracking-wider uppercase text-sm">
+                    {studentData.matricNumber}
+                  </p>
+                )}
               </div>
               <button 
                 onClick={handleShare}
@@ -451,6 +461,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           <Link href="/dashboard/target" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
             <Target className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Target</span>
+          </Link>
+          <Link href="/onboarding" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
+            <Settings className="w-6 h-6" />
+            <span className="text-[10px] font-semibold">Edit Profile</span>
           </Link>
           {studentData.isAdmin && (
             <Link href="/admin" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition-colors">
