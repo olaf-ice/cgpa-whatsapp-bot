@@ -21,6 +21,7 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
   const [level, setLevel] = useState<string>('100')
   const [courseOfStudy, setCourseOfStudy] = useState<string>('')
   const [name, setName] = useState<string>('')
+  const [matricNumber, setMatricNumber] = useState<string>('')
   
   const selectedInstData = institutions.find(i => i.id === institution)
 
@@ -46,6 +47,7 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
     startTransition(async () => {
       const response = await saveProfile({
         name,
+        matric_number: matricNumber,
         institution_id: institution,
         course: courseOfStudy,
         level: parseInt(level)
@@ -72,7 +74,7 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome! Let's get to know you.</h2>
-              <p className="text-gray-500">What is your name and course of study?</p>
+              <p className="text-gray-500">What are your basic details?</p>
             </div>
             
             <div className="space-y-4">
@@ -87,6 +89,16 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Matriculation Number</label>
+                <input
+                  type="text"
+                  value={matricNumber}
+                  onChange={(e) => setMatricNumber(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
+                  placeholder="e.g. 123456"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Course of Study</label>
                 <input
                   type="text"
@@ -98,8 +110,8 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
               </div>
               <button 
                 onClick={() => setStep(2)}
-                disabled={!name || !courseOfStudy}
-                className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium disabled:opacity-50"
+                disabled={!name || !courseOfStudy || !matricNumber}
+                className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium disabled:opacity-50 transition-all hover:bg-gray-800"
               >
                 Continue
               </button>

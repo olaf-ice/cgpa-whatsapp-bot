@@ -62,6 +62,7 @@ CREATE TABLE students (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID UNIQUE, -- REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
+    matric_number VARCHAR(50),
     institution_id UUID REFERENCES institutions(id) ON DELETE RESTRICT,
     course_of_study VARCHAR(255) NOT NULL,
     entry_level INTEGER NOT NULL DEFAULT 100,

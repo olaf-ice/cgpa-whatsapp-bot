@@ -4,7 +4,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function saveProfile(data: { name: string, institution_id: string, course: string, level: number }) {
+export async function saveProfile(data: { name: string, matric_number: string, institution_id: string, course: string, level: number }) {
   const supabase = await createClient()
   
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -31,6 +31,7 @@ export async function saveProfile(data: { name: string, institution_id: string, 
   if (existingStudent) {
     const { error } = await (supabase as any).from('students').update({
       name: data.name,
+      matric_number: data.matric_number,
       institution_id: data.institution_id,
       course_of_study: data.course,
       entry_level: data.level,
@@ -41,6 +42,7 @@ export async function saveProfile(data: { name: string, institution_id: string, 
     const { error: insertError } = await (supabase as any).from('students').insert({
       user_id: user.id,
       name: data.name,
+      matric_number: data.matric_number,
       institution_id: data.institution_id,
       course_of_study: data.course,
       entry_level: data.level,
@@ -52,6 +54,7 @@ export async function saveProfile(data: { name: string, institution_id: string, 
       if (insertError.code === '23505') { 
         const { error: fallbackError } = await (supabase as any).from('students').update({
           name: data.name,
+          matric_number: data.matric_number,
           institution_id: data.institution_id,
           course_of_study: data.course,
           entry_level: data.level,
