@@ -140,7 +140,8 @@ export default async function DashboardPage() {
     numericRank,
     totalPeers,
     coachInsight,
-    emailRemindersEnabled: student.email_reminders_enabled !== false // defaults to true
+    emailRemindersEnabled: student.email_reminders_enabled !== false, // defaults to true
+    isAdmin: student.is_admin === true
   }
 
   // Sunk Cost Paywall

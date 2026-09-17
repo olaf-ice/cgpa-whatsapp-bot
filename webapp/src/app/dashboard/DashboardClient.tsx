@@ -3,25 +3,28 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail } from 'lucide-react'
+import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail, GraduationCap, ShieldAlert } from 'lucide-react'
 import { savePhoneNumber, toggleEmailReminders } from './actions'
 
-interface StudentData {
-  name: string;
-  institution: string;
-  courseOfStudy?: string;
-  numericRank?: number;
-  totalPeers?: number;
-  scale: number;
-  currentCGPA: number;
-  trendData: { semester: string, gpa: number }[];
-  phoneNumber?: string;
-  percentileRank?: number;
-  coachInsight?: string;
-  emailRemindersEnabled?: boolean;
+interface DashboardClientProps {
+  studentData: {
+    name: string;
+    institution: string;
+    courseOfStudy?: string;
+    scale: number;
+    currentCGPA: number;
+    trendData: { semester: string, gpa: number }[];
+    phoneNumber?: string | null;
+    percentileRank?: number;
+    numericRank?: number;
+    totalPeers?: number;
+    coachInsight?: string;
+    emailRemindersEnabled?: boolean;
+    isAdmin: boolean;
+  }
 }
 
-export default function DashboardClient({ studentData }: { studentData: StudentData }) {
+export default function DashboardClient({ studentData }: DashboardClientProps) {
   const [phone, setPhone] = useState(studentData.phoneNumber || '')
   const [isPending, startTransition] = useTransition()
   const [phoneSuccess, setPhoneSuccess] = useState(false)
@@ -59,13 +62,18 @@ export default function DashboardClient({ studentData }: { studentData: StudentD
       if (cgpa >= 2.6) return 'Second Class Lower'
       if (cgpa >= 1.5) return 'Third Class'
       return 'Pass'
-    } else {
-      // 5.0 or 4.0 scale approximations
-      if (cgpa >= (studentData.scale * 0.90)) return 'First Class'
-      if (cgpa >= (studentData.scale * 0.70)) return 'Second Class Upper'
-      if (cgpa >= (studentData.scale * 0.48)) return 'Second Class Lower'
-      if (cgpa >= (studentData.scale * 0.30)) return 'Third Class'
+    } else if (studentData.scale === 5.0) {
+      if (cgpa >= 4.5) return 'First Class'
+      if (cgpa >= 3.5) return 'Second Class Upper'
+      if (cgpa >= 2.4) return 'Second Class Lower'
+      if (cgpa >= 1.5) return 'Third Class'
       return 'Pass'
+    } else {
+      if (cgpa >= 3.5) return 'Distinction'
+      if (cgpa >= 3.0) return 'Upper Credit'
+      if (cgpa >= 2.5) return 'Lower Credit'
+      if (cgpa >= 2.0) return 'Pass'
+      return 'Fail'
     }
   }
 
@@ -144,6 +152,12 @@ export default function DashboardClient({ studentData }: { studentData: StudentD
         </div>
 
         <nav className="flex-1 space-y-2">
+          {studentData.isAdmin && (
+            <Link href="/admin" className="flex items-center gap-3 px-4 py-3 bg-red-50 text-red-700 rounded-xl font-bold transition-all mb-4 border border-red-100">
+              <ShieldAlert className="w-5 h-5" />
+              Admin Panel
+            </Link>
+          )}
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-700 rounded-xl font-semibold transition-all">
             <Home className="w-5 h-5" />
             Dashboard
@@ -438,10 +452,12 @@ export default function DashboardClient({ studentData }: { studentData: StudentD
             <Target className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Target</span>
           </Link>
-          <Link href="/premium" className="flex flex-col items-center gap-1 text-amber-500 hover:text-amber-600 transition-colors">
-            <Crown className="w-6 h-6" />
-            <span className="text-[10px] font-semibold">Pro</span>
-          </Link>
+          {studentData.isAdmin && (
+            <Link href="/admin" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition-colors">
+              <ShieldAlert className="w-6 h-6" />
+              <span className="text-[10px] font-semibold">Admin</span>
+            </Link>
+          )}
         </div>
       </nav>
 
