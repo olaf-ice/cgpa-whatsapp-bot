@@ -31,11 +31,15 @@ export async function saveProfile(data: { name: string, institution: string, cou
     return { error: 'Could not resolve institution in database.' }
   }
 
-  const { data: existingStudent } = await (supabase as any)
+  const { data: existingStudent, error: selectError } = await (supabase as any)
     .from('students')
     .select('id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
+
+  if (selectError) {
+    return { error: 'Error checking profile: ' + selectError.message };
+  }
 
   if (existingStudent) {
     const { error } = await (supabase as any).from('students').update({
@@ -47,7 +51,7 @@ export async function saveProfile(data: { name: string, institution: string, cou
     }).eq('user_id', user.id);
     if (error) return { error: error.message };
   } else {
-    const { error } = await (supabase as any).from('students').insert({
+    const { error: insertError } = await (supabase as any).from('students').insert({
       user_id: user.id,
       name: data.name,
       institution_id: instData.id,
@@ -55,7 +59,22 @@ export async function saveProfile(data: { name: string, institution: string, cou
       entry_level: data.level,
       current_level: data.level
     });
-    if (error) return { error: error.message };
+    
+    // Fallback: If it STILL says duplicate key, it means a race condition or caching hid the record. Force an update.
+    if (insertError) {
+      if (insertError.code === '23505') { 
+        const { error: fallbackError } = await (supabase as any).from('students').update({
+          name: data.name,
+          institution_id: instData.id,
+          course_of_study: data.course,
+          entry_level: data.level,
+          current_level: data.level
+        }).eq('user_id', user.id);
+        if (fallbackError) return { error: fallbackError.message };
+      } else {
+        return { error: insertError.message };
+      }
+    }
   }
 
   redirect('/dashboard')
