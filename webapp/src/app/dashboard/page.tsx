@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import DashboardClient from './DashboardClient'
-import dynamic from 'next/dynamic'
+import LockedDashboardWrapper from './LockedDashboardWrapper'
 
-const LockedDashboard = dynamic(() => import('./LockedDashboard'), { ssr: false })
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -147,7 +146,7 @@ export default async function DashboardPage() {
   // Sunk Cost Paywall
   if (!student.has_paid) {
     if (!student.is_admin) {
-      return <LockedDashboard email={user.email || ''} name={student.name} />
+      return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
     }
   }
 
