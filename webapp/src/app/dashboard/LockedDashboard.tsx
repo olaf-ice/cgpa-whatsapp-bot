@@ -1,9 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { usePaystackPayment } from 'react-paystack'
 import { Lock, Brain, TrendingUp } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 interface LockedDashboardProps {
   email: string;
@@ -11,44 +8,6 @@ interface LockedDashboardProps {
 }
 
 export default function LockedDashboard({ email, name }: LockedDashboardProps) {
-  const [isVerifying, setIsVerifying] = useState(false)
-  const router = useRouter()
-
-  const config = {
-    reference: (new Date()).getTime().toString(),
-    email: email,
-    amount: 2000 * 100, // ₦2,000 in kobo
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
-  };
-
-  const onSuccess = async (reference: any) => {
-    setIsVerifying(true)
-    try {
-      const res = await fetch('/api/paystack/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: reference.reference })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        router.refresh() // Reload the page to unlock the dashboard
-      } else {
-        alert("Payment verification failed. Please contact support.")
-        setIsVerifying(false)
-      }
-    } catch (e) {
-      alert("An error occurred during verification.")
-      setIsVerifying(false)
-    }
-  }
-
-  const onClose = () => {
-    console.log('Payment closed')
-  }
-
-  const initializePayment = usePaystackPayment(config);
-
   return (
     <div className="relative min-h-screen bg-slate-50 flex flex-col items-center justify-center overflow-hidden p-4">
       {/* Blurred background mock of the dashboard */}
@@ -89,25 +48,6 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
 
         {/* Payment Options */}
         <div className="space-y-6">
-          <button
-            onClick={() => {
-              initializePayment({ onSuccess, onClose } as any)
-            }}
-            disabled={isVerifying}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70 disabled:cursor-wait"
-          >
-            {isVerifying ? 'Verifying Payment...' : 'Pay Online (Paystack)'}
-          </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300/50"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[#f8fafc] text-gray-500 font-medium">OR PAY VIA TRANSFER</span>
-            </div>
-          </div>
-
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-left">
             <div className="space-y-3 text-sm text-gray-600 mb-6">
               <div className="flex justify-between items-center border-b border-gray-100 pb-2">
