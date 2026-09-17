@@ -4,7 +4,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function saveProfile(data: { name: string, institution: string, course: string, level: number }) {
+export async function saveProfile(data: { name: string, institution_id: string, course: string, level: number }) {
   const supabase = await createClient()
   
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -13,22 +13,9 @@ export async function saveProfile(data: { name: string, institution: string, cou
     return { error: 'Authentication failed. Please log in again.' }
   }
 
-  const instMap: Record<string, string> = {
-    'ui': 'University of Ibadan (UI)',
-    'unilag': 'University of Lagos (UNILAG)',
-    'yabatech': 'Yaba College of Technology (YABATECH)'
-  };
-  
-  const realName = instMap[data.institution] || 'University of Ibadan (UI)';
-
-  const { data: instData, error: instError } = await (supabase as any)
-    .from('institutions')
-    .select('id')
-    .eq('name', realName)
-    .single();
-
-  if (instError || !instData) {
-    return { error: 'Could not resolve institution in database.' }
+  // The client now passes the exact institution UUID
+  if (!data.institution_id) {
+    return { error: 'Invalid institution selected.' }
   }
 
   const { data: existingStudent, error: selectError } = await (supabase as any)
@@ -44,7 +31,7 @@ export async function saveProfile(data: { name: string, institution: string, cou
   if (existingStudent) {
     const { error } = await (supabase as any).from('students').update({
       name: data.name,
-      institution_id: instData.id,
+      institution_id: data.institution_id,
       course_of_study: data.course,
       entry_level: data.level,
       current_level: data.level
@@ -54,7 +41,7 @@ export async function saveProfile(data: { name: string, institution: string, cou
     const { error: insertError } = await (supabase as any).from('students').insert({
       user_id: user.id,
       name: data.name,
-      institution_id: instData.id,
+      institution_id: data.institution_id,
       course_of_study: data.course,
       entry_level: data.level,
       current_level: data.level
@@ -65,7 +52,7 @@ export async function saveProfile(data: { name: string, institution: string, cou
       if (insertError.code === '23505') { 
         const { error: fallbackError } = await (supabase as any).from('students').update({
           name: data.name,
-          institution_id: instData.id,
+          institution_id: data.institution_id,
           course_of_study: data.course,
           entry_level: data.level,
           current_level: data.level

@@ -1,41 +1,52 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveProfile } from './actions'
 
-// Simplified mock data for the UI. In production, this would be fetched from Supabase.
-const INSTITUTIONS = [
-  { id: 'ui', name: 'University of Ibadan (UI)', type: 'Federal University', scale: 7.0, theme: 'ui-theme' },
-  { id: 'unilag', name: 'University of Lagos (UNILAG)', type: 'Federal University', scale: 5.0, theme: 'unilag-theme' },
-  { id: 'yabatech', name: 'Yaba College of Technology (YABATECH)', type: 'Polytechnic', scale: 4.0, theme: 'poly-theme' },
-]
+type Institution = {
+  id: string;
+  name: string;
+  type: string;
+  grading_scale: number;
+}
 
-export default function OnboardingClient() {
+export default function OnboardingClient({ institutions }: { institutions: Institution[] }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
   const [step, setStep] = useState(1)
   const [institution, setInstitution] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [level, setLevel] = useState<string>('100')
   const [courseOfStudy, setCourseOfStudy] = useState<string>('')
   const [name, setName] = useState<string>('')
   
-  const selectedInstData = INSTITUTIONS.find(i => i.id === institution)
+  const selectedInstData = institutions.find(i => i.id === institution)
+
+  // Filter institutions based on search
+  const filteredInstitutions = useMemo(() => {
+    if (!searchQuery) return institutions;
+    return institutions.filter(i => 
+      i.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      i.type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [institutions, searchQuery]);
 
   // Dynamic theme classes based on selected institution
   const getThemeClasses = () => {
     if (!selectedInstData) return 'from-gray-500 to-gray-600'
-    if (selectedInstData.id === 'ui') return 'from-blue-700 to-yellow-500' // UI Blue & Gold
-    if (selectedInstData.id === 'unilag') return 'from-red-800 to-red-600' // UNILAG Maroon
-    return 'from-emerald-700 to-emerald-500' // Generic Poly Theme
+    if (selectedInstData.type === 'Federal University' && selectedInstData.name.includes('Ibadan')) return 'from-blue-700 to-yellow-500' // UI Blue & Gold
+    if (selectedInstData.name.includes('Lagos')) return 'from-red-800 to-red-600' // UNILAG Maroon
+    if (selectedInstData.type === 'Polytechnic') return 'from-emerald-700 to-emerald-500' // Generic Poly Theme
+    return 'from-blue-600 to-blue-800' // Default University theme
   }
 
   const handleSaveProfile = () => {
     startTransition(async () => {
       const response = await saveProfile({
         name,
-        institution,
+        institution_id: institution,
         course: courseOfStudy,
         level: parseInt(level)
       })
@@ -102,25 +113,41 @@ export default function OnboardingClient() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Your Institution</h2>
               <p className="text-gray-500">This configures your exact grading scale.</p>
             </div>
+
+            <div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white mb-4"
+                placeholder="Search institutions..."
+              />
+            </div>
             
-            <div className="grid gap-3">
-              {INSTITUTIONS.map((inst) => (
-                <button
-                  key={inst.id}
-                  onClick={() => setInstitution(inst.id)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col ${
-                    institution === inst.id 
-                      ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' 
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                >
-                  <span className="font-medium text-gray-900">{inst.name}</span>
-                  <span className="text-sm text-gray-500 flex justify-between mt-1">
-                    <span>{inst.type}</span>
-                    <span className="font-medium text-blue-600">{inst.scale.toFixed(1)} Scale</span>
-                  </span>
-                </button>
-              ))}
+            <div className="grid gap-3 max-h-64 overflow-y-auto pr-2">
+              {filteredInstitutions.length > 0 ? (
+                filteredInstitutions.map((inst) => (
+                  <button
+                    key={inst.id}
+                    onClick={() => setInstitution(inst.id)}
+                    className={`p-4 rounded-xl border text-left transition-all flex flex-col ${
+                      institution === inst.id 
+                        ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' 
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <span className="font-medium text-gray-900">{inst.name}</span>
+                    <span className="text-sm text-gray-500 flex justify-between mt-1">
+                      <span>{inst.type}</span>
+                      <span className="font-medium text-blue-600">{Number(inst.grading_scale).toFixed(1)} Scale</span>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  No institutions found.
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
