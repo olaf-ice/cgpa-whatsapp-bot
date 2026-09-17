@@ -51,7 +51,8 @@ export default function LoginPage() {
     }
 
     // If we made it here, auth succeeded (or requires email confirmation)
-    const { data: { session, user } } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
     
     if (!session || !user) {
       setError('Please check your email to confirm your account (or disable "Confirm email" in Supabase).')
