@@ -106,5 +106,30 @@ export async function saveSemester(data: { level: number, term: number, courses:
     return { error: gradesError.message }
   }
 
+  // 5. Recalculate CGPA and cache it
+  const { data: allSemesters } = await (supabase as any)
+    .from('semesters')
+    .select('grades(credit_units, points)')
+    .eq('student_id', student.id);
+
+  if (allSemesters) {
+    let totalCreditUnits = 0;
+    let totalGradePoints = 0;
+
+    allSemesters.forEach((sem: any) => {
+      sem.grades?.forEach((g: any) => {
+        totalCreditUnits += g.credit_units;
+        totalGradePoints += g.points;
+      });
+    });
+
+    const newCGPA = totalCreditUnits > 0 ? (totalGradePoints / totalCreditUnits) : 0;
+
+    await (supabase as any)
+      .from('students')
+      .update({ current_cgpa: newCGPA })
+      .eq('id', student.id);
+  }
+
   redirect('/dashboard')
 }

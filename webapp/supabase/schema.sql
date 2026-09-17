@@ -71,9 +71,35 @@ CREATE TABLE students (
     email_reminders_enabled BOOLEAN DEFAULT true,
     has_paid BOOLEAN DEFAULT false,
     is_admin BOOLEAN DEFAULT false,
+    current_cgpa NUMERIC(4,2),
+    opt_in_leaderboard BOOLEAN DEFAULT true,
+    referral_code VARCHAR(50) UNIQUE,
+    referred_by VARCHAR(50),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Course Reviews Table
+CREATE TABLE course_reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    institution_id UUID REFERENCES institutions(id) ON DELETE CASCADE,
+    course_code VARCHAR(20) NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    advice_text TEXT NOT NULL,
+    author_id UUID REFERENCES students(id) ON DELETE SET NULL, 
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_course_reviews_course ON course_reviews(institution_id, course_code);
+
+ALTER TABLE course_reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access to course_reviews" 
+ON course_reviews FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated insert to course_reviews" 
+ON course_reviews FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- Master Courses Table
 CREATE TABLE courses (

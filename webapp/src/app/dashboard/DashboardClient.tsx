@@ -128,7 +128,11 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
               <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20">
                 <p className="text-blue-100 font-bold uppercase tracking-widest text-xs mb-2">Departmental Rank</p>
                 <p className="text-4xl font-black text-white">#{studentData.numericRank} <span className="text-xl text-blue-200 font-semibold">/ {studentData.totalPeers}</span></p>
-                <p className="text-blue-200 mt-2 font-medium">{studentData.courseOfStudy} {studentData.matricNumber && `• ${studentData.matricNumber}`}</p>
+                <p className="text-blue-200 mt-2 font-medium mb-4">{studentData.courseOfStudy} {studentData.matricNumber && `• ${studentData.matricNumber}`}</p>
+                
+                <Link href="/dashboard/leaderboard" className="inline-block bg-white/20 hover:bg-white/30 transition-colors text-white text-sm font-bold px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10">
+                  View Full Leaderboard →
+                </Link>
               </div>
             </div>
             <div className="flex items-center justify-between border-t border-white/20 pt-6">
@@ -224,14 +228,23 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                   </p>
                 )}
               </div>
-              <button 
-                onClick={handleShare}
-                disabled={isCapturing}
-                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-50"
-              >
-                <Crown className="w-5 h-5" />
-                {isCapturing ? 'Generating...' : 'Share Rank'}
-              </button>
+              <div className="flex gap-2">
+                <Link 
+                  href="/dashboard/transcript"
+                  className="hidden md:flex items-center gap-2 bg-white text-gray-700 font-bold px-5 py-2.5 rounded-xl hover:bg-gray-50 border border-gray-200 shadow-sm transition-all"
+                >
+                  <Download className="w-5 h-5" />
+                  PDF Transcript
+                </Link>
+                <button 
+                  onClick={handleShare}
+                  disabled={isCapturing}
+                  className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-50"
+                >
+                  <Crown className="w-5 h-5" />
+                  {isCapturing ? 'Generating...' : 'Share Rank'}
+                </button>
+              </div>
             </div>
           </div>
 
