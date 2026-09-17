@@ -31,17 +31,31 @@ export async function saveProfile(data: { name: string, institution: string, cou
     return { error: 'Could not resolve institution in database.' }
   }
 
-  const { error } = await (supabase as any).from('students').upsert({
-    user_id: user.id,
-    name: data.name,
-    institution_id: instData.id,
-    course_of_study: data.course,
-    entry_level: data.level,
-    current_level: data.level
-  }, { onConflict: 'user_id' })
+  const { data: existingStudent } = await (supabase as any)
+    .from('students')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
 
-  if (error) {
-    return { error: error.message }
+  if (existingStudent) {
+    const { error } = await (supabase as any).from('students').update({
+      name: data.name,
+      institution_id: instData.id,
+      course_of_study: data.course,
+      entry_level: data.level,
+      current_level: data.level
+    }).eq('user_id', user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await (supabase as any).from('students').insert({
+      user_id: user.id,
+      name: data.name,
+      institution_id: instData.id,
+      course_of_study: data.course,
+      entry_level: data.level,
+      current_level: data.level
+    });
+    if (error) return { error: error.message };
   }
 
   redirect('/dashboard')
