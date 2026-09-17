@@ -128,6 +128,12 @@ export default async function DashboardPage() {
     }
   }
 
+  // Referral stats
+  const { count: referralsCount } = await (supabase as any)
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('referred_by', student.id);
+
   const liveStudentData = {
     name: student.name,
     matricNumber: student.matric_number,
@@ -142,7 +148,9 @@ export default async function DashboardPage() {
     totalPeers,
     coachInsight,
     emailRemindersEnabled: student.email_reminders_enabled !== false, // defaults to true
-    isAdmin: student.is_admin === true
+    isAdmin: student.is_admin === true,
+    referralCode: student.referral_code,
+    referralsCount: referralsCount || 0
   }
 
   // Sunk Cost Paywall

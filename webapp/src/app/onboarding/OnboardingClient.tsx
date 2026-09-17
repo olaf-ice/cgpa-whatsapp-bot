@@ -11,7 +11,7 @@ type Institution = {
   grading_scale: number;
 }
 
-export default function OnboardingClient({ institutions }: { institutions: Institution[] }) {
+export default function OnboardingClient({ institutions, referredBy }: { institutions: Institution[], referredBy: string | null }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
@@ -50,7 +50,8 @@ export default function OnboardingClient({ institutions }: { institutions: Insti
         matric_number: matricNumber,
         institution_id: institution,
         course: courseOfStudy,
-        level: parseInt(level)
+        level: parseInt(level),
+        referredBy
       })
       
       if (response?.error) {

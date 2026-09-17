@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail, GraduationCap, ShieldAlert } from 'lucide-react'
+import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail, GraduationCap, ShieldAlert, Download, MessageSquare, Users } from 'lucide-react'
 import { savePhoneNumber, toggleEmailReminders } from './actions'
 
 interface DashboardClientProps {
@@ -22,6 +22,8 @@ interface DashboardClientProps {
     coachInsight?: string;
     emailRemindersEnabled?: boolean;
     isAdmin: boolean;
+    referralCode?: string;
+    referralsCount?: number;
   }
 }
 
@@ -170,6 +172,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           <Link href="/dashboard/entry" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Log Semester
+          </Link>
+          <Link href="/dashboard/reviews" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
+            <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            Course Reviews
           </Link>
           <Link href="/dashboard/target" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
             <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -437,6 +443,31 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             </div>
           </div>
           */}
+
+          {/* Referral Card */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-3xl p-6 md:p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Users className="w-6 h-6 text-indigo-600" />
+                  Invite Your Friends
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm max-w-md">
+                  Help your friends track their CGPA too! They'll be added to your department's leaderboard so you can compete together.
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="bg-white border border-indigo-200 text-indigo-700 font-mono font-bold px-4 py-2 rounded-xl text-sm select-all">
+                    {studentData.referralCode ? `https://firstclass.ng/onboarding?ref=${studentData.referralCode}` : 'Not available'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-2xl p-4 md:px-8 text-center border border-indigo-100 shadow-sm min-w-[150px]">
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Referrals</p>
+                <p className="text-4xl font-black text-indigo-600">{studentData.referralsCount || 0}</p>
+              </div>
+            </div>
+          </div>
 
           {/* Email Accountability Preferences */}
           <div className="bg-white/60 backdrop-blur-xl border border-gray-200/50 rounded-3xl p-6 md:p-8 shadow-sm">
