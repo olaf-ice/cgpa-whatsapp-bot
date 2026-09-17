@@ -50,9 +50,16 @@ export default function LoginPage() {
       }
     }
 
-    // If we made it here, auth succeeded
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
+    // If we made it here, auth succeeded (or requires email confirmation)
+    const { data: { session, user } } = await supabase.auth.getSession()
+    
+    if (!session || !user) {
+      setError('Please check your email to confirm your account (or disable "Confirm email" in Supabase).')
+      setIsLoading(false)
+      return
+    }
+
+    try {
       const { data: student } = await supabase
         .from('students')
         .select('id')
@@ -64,6 +71,9 @@ export default function LoginPage() {
       } else {
         router.push('/onboarding')
       }
+    } catch (err) {
+      console.error(err)
+      router.push('/onboarding')
     }
   }
 
