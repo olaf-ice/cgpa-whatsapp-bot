@@ -5,10 +5,6 @@ const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'cgpa_bot_verify_123'
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 // ... GET handler remains the same ...
 
 export async function GET(req: NextRequest) {
@@ -50,6 +46,10 @@ async function sendWhatsAppMessage(to: string, text: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
     const body = await req.json()
 
     if (body.object === 'whatsapp_business_account') {
