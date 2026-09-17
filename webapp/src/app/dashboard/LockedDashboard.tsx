@@ -112,15 +112,15 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
             <div className="space-y-3 text-sm text-gray-600 mb-6">
               <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                 <span>Bank Name</span>
-                <span className="font-bold text-gray-900">Guaranty Trust Bank (GTB)</span>
+                <span className="font-bold text-gray-900">Guaranty Trust Bank</span>
               </div>
               <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                 <span>Account Name</span>
-                <span className="font-bold text-gray-900">Your Name Here</span>
+                <span className="font-bold text-gray-900">Oladipupo Timileyin Simeon</span>
               </div>
               <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                 <span>Account Number</span>
-                <span className="font-bold text-gray-900 text-lg tracking-wider">0123456789</span>
+                <span className="font-bold text-gray-900 text-lg tracking-wider">0253138467</span>
               </div>
               <div className="flex justify-between items-center pt-1">
                 <span>Amount</span>
@@ -128,7 +128,7 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
               </div>
             </div>
             <a 
-              href={`https://wa.me/234XXXXXXXXXX?text=Hello,%20I%20just%20paid%20for%20the%20CGPA%20Bot.%20My%20email%20is%20${email}`}
+              href={`https://wa.me/2349079131502?text=Hello,%20I%20just%20paid%20for%20the%20CGPA%20Bot.%20My%20email%20is%20${email}`}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white text-center rounded-xl font-bold transition-all shadow-md shadow-green-500/20"
