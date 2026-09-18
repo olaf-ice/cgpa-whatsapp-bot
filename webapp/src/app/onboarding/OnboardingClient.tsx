@@ -11,17 +11,19 @@ type Institution = {
   grading_scale: number;
 }
 
-export default function OnboardingClient({ institutions, referredBy }: { institutions: Institution[], referredBy: string | null }) {
+export default function OnboardingClient({ institutions, referredBy, existingProfile }: { institutions: Institution[], referredBy: string | null, existingProfile?: any }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
+  const isEditing = !!existingProfile;
+
   const [step, setStep] = useState(1)
-  const [institution, setInstitution] = useState<string>('')
+  const [institution, setInstitution] = useState<string>(existingProfile?.institution_id || '')
   const [searchQuery, setSearchQuery] = useState('')
-  const [level, setLevel] = useState<string>('100')
-  const [courseOfStudy, setCourseOfStudy] = useState<string>('')
-  const [name, setName] = useState<string>('')
-  const [matricNumber, setMatricNumber] = useState<string>('')
+  const [level, setLevel] = useState<string>(existingProfile?.current_level?.toString() || '100')
+  const [name, setName] = useState<string>(existingProfile?.name && existingProfile?.name !== 'Student' ? existingProfile.name : '')
+  const [matricNumber, setMatricNumber] = useState<string>(existingProfile?.matric_number || '')
+  const [courseOfStudy, setCourseOfStudy] = useState<string>(existingProfile?.course_of_study || '')
   
   const selectedInstData = institutions.find(i => i.id === institution)
 
@@ -46,7 +48,7 @@ export default function OnboardingClient({ institutions, referredBy }: { institu
   const handleSaveProfile = () => {
     startTransition(async () => {
       const response = await saveProfile({
-        name,
+        name: name || 'Student',
         matric_number: matricNumber,
         institution_id: institution,
         course: courseOfStudy,
@@ -68,59 +70,9 @@ export default function OnboardingClient({ institutions, referredBy }: { institu
         <div className="flex gap-2 mb-8">
           <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
           <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-          <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
         </div>
 
         {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome! Let's get to know you.</h2>
-              <p className="text-gray-500">What are your basic details?</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Matriculation Number</label>
-                <input
-                  type="text"
-                  value={matricNumber}
-                  onChange={(e) => setMatricNumber(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
-                  placeholder="e.g. 123456"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Course of Study</label>
-                <input
-                  type="text"
-                  value={courseOfStudy}
-                  onChange={(e) => setCourseOfStudy(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white"
-                  placeholder="e.g. Computer Science"
-                />
-              </div>
-              <button 
-                onClick={() => setStep(2)}
-                disabled={!name || !courseOfStudy || !matricNumber}
-                className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium disabled:opacity-50 transition-all hover:bg-gray-800"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Your Institution</h2>
@@ -164,9 +116,8 @@ export default function OnboardingClient({ institutions, referredBy }: { institu
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="px-6 py-3 border border-gray-200 rounded-xl font-medium">Back</button>
               <button 
-                onClick={() => setStep(3)}
+                onClick={() => setStep(2)}
                 disabled={!institution}
                 className={`flex-1 py-3 bg-gradient-to-r ${getThemeClasses()} text-white rounded-xl font-medium disabled:opacity-50 transition-all`}
               >
@@ -176,7 +127,7 @@ export default function OnboardingClient({ institutions, referredBy }: { institu
           </div>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">What level are you starting from?</h2>
@@ -199,24 +150,43 @@ export default function OnboardingClient({ institutions, referredBy }: { institu
               ))}
             </div>
 
+            {isEditing && (
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Personal Details</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Matric Number</label>
+                  <input type="text" value={matricNumber} onChange={e => setMatricNumber(e.target.value)} placeholder="e.g. 210045" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Course of Study</label>
+                  <input type="text" value={courseOfStudy} onChange={e => setCourseOfStudy(e.target.value)} placeholder="e.g. Computer Science" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+            )}
+
             <div className="p-4 bg-gray-50 rounded-xl mt-6 border border-gray-100">
-              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Profile Summary</h4>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Summary</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li><span className="font-medium text-gray-900">{name}</span></li>
-                <li>{courseOfStudy}</li>
                 <li>{selectedInstData?.name}</li>
                 <li>Starting at {level} Level</li>
               </ul>
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button onClick={() => setStep(2)} className="px-6 py-3 border border-gray-200 rounded-xl font-medium">Back</button>
+              <button onClick={() => setStep(1)} className="px-6 py-3 border border-gray-200 rounded-xl font-medium">Back</button>
               <button 
                 onClick={handleSaveProfile}
                 disabled={isPending}
                 className={`flex-1 py-3 bg-gradient-to-r ${getThemeClasses()} text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50`}
               >
-                {isPending ? 'Saving...' : 'Save & Go to Dashboard'}
+                {isPending ? 'Calculating...' : 'See My CGPA'}
               </button>
             </div>
           </div>

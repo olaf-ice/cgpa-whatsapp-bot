@@ -150,7 +150,8 @@ export default async function DashboardPage() {
     emailRemindersEnabled: student.email_reminders_enabled !== false, // defaults to true
     isAdmin: student.is_admin === true,
     referralCode: student.referral_code,
-    referralsCount: referralsCount || 0
+    referralsCount: referralsCount || 0,
+    isAnonymous: user.is_anonymous === true
   }
 
   // Sunk Cost Paywall

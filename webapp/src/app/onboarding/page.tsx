@@ -12,6 +12,20 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     
   const queryParam = await searchParams;
   const referredBy = queryParam.ref || null;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  let existingProfile = null;
+  
+  if (user) {
+    const { data } = await (supabase as any)
+      .from('students')
+      .select('name, matric_number, course_of_study, institution_id, entry_level, current_level')
+      .eq('user_id', user.id)
+      .single();
+    if (data) {
+      existingProfile = data;
+    }
+  }
 
-  return <OnboardingClient institutions={institutions || []} referredBy={referredBy} />
+  return <OnboardingClient institutions={institutions || []} referredBy={referredBy} existingProfile={existingProfile} />
 }

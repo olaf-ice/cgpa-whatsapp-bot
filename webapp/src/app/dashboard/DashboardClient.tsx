@@ -24,6 +24,7 @@ interface DashboardClientProps {
     isAdmin: boolean;
     referralCode?: string;
     referralsCount?: number;
+    isAnonymous?: boolean;
   }
 }
 
@@ -173,10 +174,6 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Log Semester
           </Link>
-          <Link href="/dashboard/reviews" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
-            <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            Course Reviews
-          </Link>
           <Link href="/dashboard/target" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
             <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Target Planner
@@ -203,6 +200,21 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
       <main className="flex-1 h-full overflow-y-auto overflow-x-hidden p-6 md:p-10 relative z-10 pb-24 md:pb-10">
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           
+          {/* Anonymous Account Banner */}
+          {studentData.isAnonymous && (
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-3xl shadow-xl shadow-blue-600/20 flex flex-col md:flex-row items-center justify-between gap-4">
+               <div>
+                 <h3 className="font-black text-xl flex items-center gap-2">
+                    🔒 Save Your Progress
+                 </h3>
+                 <p className="font-medium mt-1 opacity-90">Your CGPA data is currently unsaved. Create an account to access it on any device.</p>
+               </div>
+               <Link href="/login" className="bg-white text-blue-600 font-bold px-6 py-3 rounded-xl shrink-0 hover:bg-blue-50 transition-colors">
+                 Save Account
+               </Link>
+            </div>
+          )}
+
           {/* Probation Warning */}
           {isProbationRisk && (
             <div className="bg-red-600 text-white p-6 rounded-3xl shadow-xl shadow-red-600/20 flex flex-col md:flex-row items-center justify-between gap-4 animate-bounce">
@@ -235,21 +247,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                 )}
               </div>
               <div className="flex gap-2">
-                <Link 
-                  href="/dashboard/transcript"
-                  className="hidden md:flex items-center gap-2 bg-white text-gray-700 font-bold px-5 py-2.5 rounded-xl hover:bg-gray-50 border border-gray-200 shadow-sm transition-all"
-                >
-                  <Download className="w-5 h-5" />
-                  PDF Transcript
-                </Link>
-                <button 
-                  onClick={handleShare}
-                  disabled={isCapturing}
-                  className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-5 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-50"
-                >
-                  <Crown className="w-5 h-5" />
-                  {isCapturing ? 'Generating...' : 'Share Rank'}
-                </button>
+                {/* PDF Transcript and Share Rank buttons hidden for Phase 1 */}
               </div>
             </div>
           </div>

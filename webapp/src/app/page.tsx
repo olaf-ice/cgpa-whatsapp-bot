@@ -33,7 +33,7 @@ export default function Home() {
         {/* Call to Action */}
         <div className="flex flex-col sm:flex-row gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
           <Link 
-            href="/login" 
+            href="/start" 
             className="flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1"
           >
             Get Started Now
