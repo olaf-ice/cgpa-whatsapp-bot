@@ -25,6 +25,9 @@ interface DashboardClientProps {
     referralCode?: string;
     referralsCount?: number;
     isAnonymous?: boolean;
+    outstandingCarryovers?: { code: string, level: number, term: number, units: number }[];
+    totalUnitsRegistered?: number;
+    totalUnitsPassed?: number;
   }
 }
 
@@ -230,6 +233,23 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             </div>
           )}
 
+          {/* Outstanding Carryovers Warning */}
+          {studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0 && (
+            <div className="bg-orange-500 text-white p-6 rounded-3xl shadow-xl shadow-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-4">
+               <div>
+                 <h3 className="font-black text-xl flex items-center gap-2">
+                    🚨 Outstanding Carryovers
+                 </h3>
+                 <p className="font-medium mt-1 opacity-90">
+                    You have {studentData.outstandingCarryovers.length} course(s) you must retake and pass to graduate: 
+                    <strong className="block mt-1 text-lg">
+                      {studentData.outstandingCarryovers.map(c => c.code).join(', ')}
+                    </strong>
+                 </p>
+               </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex flex-col gap-1">
             <div className="flex justify-between items-start">
@@ -240,11 +260,19 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                 <p className="text-gray-500 font-medium mt-1">
                   {studentData.institution} • {studentData.scale.toFixed(1)} Scale
                 </p>
-                {studentData.matricNumber && (
-                  <p className="text-blue-600 font-bold mt-1 tracking-wider uppercase text-sm">
-                    {studentData.matricNumber}
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  {studentData.matricNumber && (
+                    <p className="text-blue-600 font-bold tracking-wider uppercase text-sm border-r border-gray-300 pr-3">
+                      {studentData.matricNumber}
+                    </p>
+                  )}
+                  <p className="text-sm font-semibold text-gray-600">
+                    Registered: <span className="text-gray-900">{studentData.totalUnitsRegistered ?? 0}</span> Units
                   </p>
-                )}
+                  <p className="text-sm font-semibold text-emerald-600">
+                    Passed: <span className="text-emerald-700">{studentData.totalUnitsPassed ?? 0}</span> Units
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
                 {/* PDF Transcript and Share Rank buttons hidden for Phase 1 */}

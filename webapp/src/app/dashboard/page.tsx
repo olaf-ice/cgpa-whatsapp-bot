@@ -20,7 +20,7 @@ export default async function DashboardPage() {
       institution:institutions(name, grading_scale),
       semesters(
         level, term,
-        grades(credit_units, points)
+        grades(course_code, grade, credit_units, points)
       )
     `)
     .eq('user_id', user.id)
@@ -35,8 +35,15 @@ export default async function DashboardPage() {
   // Calculate CGPA and prepare trend data
   let totalCreditUnits = 0;
   let totalGradePoints = 0;
+  let totalUnitsPassed = 0;
   
   const trendData: any[] = [];
+  
+  // Maps to track carryovers
+  // normalize code: remove spaces and uppercase
+  const normalizeCode = (code: string) => (code || '').replace(/\s+/g, '').toUpperCase();
+  const failedCourses = new Map<string, { code: string, level: number, term: number, units: number }>();
+  const passedCourses = new Set<string>();
   
   if (student.semesters && student.semesters.length > 0) {
     // Sort semesters by level, then term
@@ -56,6 +63,22 @@ export default async function DashboardPage() {
           
           totalCreditUnits += g.credit_units;
           totalGradePoints += g.points;
+          
+          if (g.points > 0 && g.grade !== 'F') {
+            totalUnitsPassed += g.credit_units;
+          }
+          
+          // Track carryovers
+          const normCode = normalizeCode(g.course_code);
+          if (normCode) {
+            if (g.points === 0 || g.grade === 'F') {
+              // Mark as failed in this semester
+              failedCourses.set(normCode, { code: g.course_code.toUpperCase(), level: sem.level, term: sem.term, units: g.credit_units });
+            } else if (g.points > 0) {
+              // Passed
+              passedCourses.add(normCode);
+            }
+          }
         });
       }
 
@@ -71,6 +94,14 @@ export default async function DashboardPage() {
   }
 
   const currentCGPA = totalCreditUnits > 0 ? (totalGradePoints / totalCreditUnits) : 0.0;
+  
+  // Calculate outstanding carryovers
+  const outstandingCarryovers: { code: string, level: number, term: number, units: number }[] = [];
+  failedCourses.forEach((details, normCode) => {
+    if (!passedCourses.has(normCode)) {
+      outstandingCarryovers.push(details);
+    }
+  });
 
   // --- Peer Benchmarking ---
   const { data: peers } = await (supabase as any)
@@ -137,10 +168,10 @@ export default async function DashboardPage() {
   const liveStudentData = {
     name: student.name,
     matricNumber: student.matric_number,
-    institution: student.institution.name,
+    institution: student.institution?.name || 'Unknown Institution',
     courseOfStudy: student.course_of_study,
-    scale: student.institution.grading_scale,
-    currentCGPA: currentCGPA,
+    scale: student.institution?.grading_scale || 5.0,
+    currentCGPA: Number(currentCGPA.toFixed(2)),
     trendData: trendData,
     phoneNumber: student.phone_number,
     percentileRank,
@@ -151,7 +182,10 @@ export default async function DashboardPage() {
     isAdmin: student.is_admin === true,
     referralCode: student.referral_code,
     referralsCount: referralsCount || 0,
-    isAnonymous: user.is_anonymous === true
+    isAnonymous: user.is_anonymous === true,
+    outstandingCarryovers,
+    totalUnitsRegistered: totalCreditUnits,
+    totalUnitsPassed
   }
 
   // Sunk Cost Paywall
