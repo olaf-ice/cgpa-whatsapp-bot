@@ -188,9 +188,9 @@ export default async function DashboardPage() {
     totalUnitsPassed
   }
 
-  // Sunk Cost Paywall
   if (!student.has_paid) {
-    if (!student.is_admin) {
+    const isSimeon = user.email?.toLowerCase().trim() === 'simeoncranier@gmail.com';
+    if (!student.is_admin && !isSimeon) {
       return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
     }
   }
