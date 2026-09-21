@@ -28,7 +28,8 @@ export default async function TargetPage() {
     redirect('/onboarding')
   }
 
-  const isSimeon = user.email?.toLowerCase().trim() === 'simeoncranier@gmail.com';
+  const email = user.email?.toLowerCase().trim() || '';
+  const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
   if (!student.has_paid && !student.is_admin && !isSimeon) {
     redirect('/dashboard') // Route back to dashboard to hit the paywall
   }

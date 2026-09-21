@@ -189,7 +189,8 @@ export default async function DashboardPage() {
   }
 
   if (!student.has_paid) {
-    const isSimeon = user.email?.toLowerCase().trim() === 'simeoncranier@gmail.com';
+    const email = user.email?.toLowerCase().trim() || '';
+    const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
     if (!student.is_admin && !isSimeon) {
       return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
     }
