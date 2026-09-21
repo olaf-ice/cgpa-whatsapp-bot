@@ -1,10 +1,84 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import Link from 'next/link'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail, GraduationCap, ShieldAlert, Download, MessageSquare, Users } from 'lucide-react'
+import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
+import CountUp from 'react-countup'
 import { savePhoneNumber, toggleEmailReminders } from './actions'
+
+const getThemeColors = (institution: string) => {
+  const instLower = institution.toLowerCase();
+  
+  if (instLower.includes('ibadan')) {
+    return {
+      bgGradient: 'from-blue-100/40 via-gray-50 to-yellow-100/40',
+      primaryBlob: 'from-blue-400 to-blue-600',
+      secondaryBlob: 'from-yellow-400 to-yellow-500',
+      bragCardBg: 'from-blue-900 to-blue-800',
+      iconBox: 'from-blue-600 to-blue-800',
+      iconBoxShadow: 'shadow-blue-500/20',
+      textGradient: 'from-blue-900 to-blue-700',
+      chartStroke: '#1d4ed8',
+      chartStop1: '#1d4ed8',
+      chartStop2: '#eab308',
+      action1Bg: 'bg-blue-600',
+      action1Shadow: 'shadow-blue-500/30',
+      action1Blob: 'bg-blue-100',
+      action2Bg: 'bg-yellow-500',
+      action2Shadow: 'shadow-yellow-500/30',
+      action2Blob: 'bg-yellow-100',
+      badgeBg: 'bg-yellow-50',
+      badgeText: 'text-yellow-700',
+    };
+  }
+  
+  if (instLower.includes('lagos')) {
+    return {
+      bgGradient: 'from-red-100/40 via-gray-50 to-rose-100/40',
+      primaryBlob: 'from-red-400 to-red-600',
+      secondaryBlob: 'from-rose-400 to-rose-500',
+      bragCardBg: 'from-red-900 to-red-800',
+      iconBox: 'from-red-600 to-red-800',
+      iconBoxShadow: 'shadow-red-500/20',
+      textGradient: 'from-red-900 to-red-700',
+      chartStroke: '#b91c1c',
+      chartStop1: '#b91c1c',
+      chartStop2: '#fda4af',
+      action1Bg: 'bg-red-600',
+      action1Shadow: 'shadow-red-500/30',
+      action1Blob: 'bg-red-100',
+      action2Bg: 'bg-rose-600',
+      action2Shadow: 'shadow-rose-500/30',
+      action2Blob: 'bg-rose-100',
+      badgeBg: 'bg-rose-50',
+      badgeText: 'text-rose-700',
+    };
+  }
+
+  // Default Theme
+  return {
+      bgGradient: 'from-blue-100/40 via-gray-50 to-purple-100/40',
+      primaryBlob: 'from-blue-400 to-indigo-500',
+      secondaryBlob: 'from-purple-400 to-pink-500',
+      bragCardBg: 'from-blue-900 to-indigo-900',
+      iconBox: 'from-blue-600 to-indigo-600',
+      iconBoxShadow: 'shadow-blue-500/20',
+      textGradient: 'from-blue-900 to-indigo-900',
+      chartStroke: '#4f46e5',
+      chartStop1: '#4f46e5',
+      chartStop2: '#4f46e5', 
+      action1Bg: 'bg-blue-600',
+      action1Shadow: 'shadow-blue-500/30',
+      action1Blob: 'bg-blue-100',
+      action2Bg: 'bg-purple-600',
+      action2Shadow: 'shadow-purple-500/30',
+      action2Blob: 'bg-purple-100',
+      badgeBg: 'bg-emerald-50',
+      badgeText: 'text-emerald-600',
+  };
+}
 
 interface DashboardClientProps {
   studentData: {
@@ -38,6 +112,15 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
   const [phoneError, setPhoneError] = useState<string|null>(null)
   const [emailEnabled, setEmailEnabled] = useState(studentData.emailRemindersEnabled ?? true)
   const [isCapturing, setIsCapturing] = useState(false)
+
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  const handleMouseMove = ({ currentTarget, clientX, clientY }: React.MouseEvent) => {
+    const { left, top } = currentTarget.getBoundingClientRect()
+    mouseX.set(clientX - left)
+    mouseY.set(clientY - top)
+  }
 
   const handleToggleEmail = () => {
     const newVal = !emailEnabled;
@@ -119,12 +202,14 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
   const projectedBoost = ((studentData.currentCGPA * 60) + (boostGPA * 20)) / 80; // Rough 80-unit future projection
   const currentDegree = getDegreeClass(studentData.currentCGPA);
   const projectedDegree = getDegreeClass(projectedBoost);
+  
+  const theme = getThemeColors(studentData.institution);
 
   return (
-    <div className="flex h-screen bg-gray-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/40 via-gray-50 to-purple-100/40 overflow-hidden relative">
+    <div className={`flex h-screen bg-gray-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.bgGradient} overflow-hidden relative`}>
       
       {/* Hidden Brag Card for html2canvas */}
-      <div id="brag-card" className="hidden absolute left-[-9999px] top-[-9999px] w-[500px] h-[600px] bg-gradient-to-br from-blue-900 to-indigo-900 p-10 rounded-[3rem] text-white overflow-hidden shadow-2xl">
+      <div id="brag-card" className={`hidden absolute left-[-9999px] top-[-9999px] w-[500px] h-[600px] bg-gradient-to-br ${theme.bragCardBg} p-10 rounded-[3rem] text-white overflow-hidden shadow-2xl`}>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-30 mix-blend-screen" />
          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full blur-3xl opacity-30 mix-blend-screen" />
          <div className="relative z-10 h-full flex flex-col justify-between">
@@ -154,10 +239,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 bg-white/60 backdrop-blur-xl border-r border-gray-200/60 p-6 h-full shadow-sm z-20">
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/20">
+          <div className={`w-10 h-10 bg-gradient-to-br ${theme.iconBox} rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg ${theme.iconBoxShadow}`}>
             C
           </div>
-          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-indigo-900">
+          <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.textGradient}`}>
             FirstClass.ng
           </span>
         </div>
@@ -201,7 +286,12 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
 
       {/* Main Content Area */}
       <main className="flex-1 h-full overflow-y-auto overflow-x-hidden p-6 md:p-10 relative z-10 pb-24 md:pb-10">
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, staggerChildren: 0.1 }}
+          className="max-w-4xl mx-auto space-y-8"
+        >
           
           {/* Anonymous Account Banner */}
           {studentData.isAnonymous && (
@@ -281,16 +371,31 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           </div>
 
           {/* Glassmorphic CGPA Card */}
-          <div className="relative overflow-hidden rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-blue-900/10 border border-white/50 bg-white/40 backdrop-blur-2xl">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full blur-3xl opacity-30 animate-pulse" />
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-gradient-to-tr from-purple-400 to-pink-500 rounded-full blur-3xl opacity-20" />
+          <motion.div 
+            onMouseMove={handleMouseMove}
+            className="group relative overflow-hidden rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-blue-900/10 border border-white/50 bg-white/40 backdrop-blur-2xl"
+          >
+            <motion.div
+              className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 transition duration-300 group-hover:opacity-100"
+              style={{
+                background: useMotionTemplate`
+                  radial-gradient(
+                    650px circle at ${mouseX}px ${mouseY}px,
+                    rgba(255,255,255,0.8),
+                    transparent 80%
+                  )
+                `,
+              }}
+            />
+            <div className={`absolute -top-24 -right-24 w-64 h-64 bg-gradient-to-br ${theme.primaryBlob} rounded-full blur-3xl opacity-30 animate-pulse`} />
+            <div className={`absolute -bottom-24 -left-24 w-64 h-64 bg-gradient-to-tr ${theme.secondaryBlob} rounded-full blur-3xl opacity-20`} />
             
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div>
                 <p className="text-gray-600 font-semibold uppercase tracking-widest text-sm mb-2">Current CGPA</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600 tracking-tight">
-                    {studentData.currentCGPA.toFixed(2)}
+                    <CountUp end={studentData.currentCGPA} decimals={2} duration={2} separator="," />
                   </span>
                   <span className="text-2xl font-semibold text-gray-400">
                     / {studentData.scale.toFixed(1)}
@@ -304,7 +409,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                   <span className="font-black text-blue-700 text-3xl">#{studentData.numericRank}</span>
                   <span className="font-semibold text-gray-400 text-lg mb-1">/ {studentData.totalPeers}</span>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-600 mt-1 bg-emerald-50 px-2 py-0.5 rounded-md">Top {studentData.percentileRank}%</span>
+                <span className={`text-[10px] font-bold ${theme.badgeText} mt-1 ${theme.badgeBg} px-2 py-0.5 rounded-md`}>Top {studentData.percentileRank}%</span>
               </div>
             </div>
             
@@ -317,7 +422,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                 <Crown className="w-5 h-5" />
                 {isCapturing ? 'Generating Card...' : 'Share My Rank'}
               </button>
-          </div>
+          </motion.div>
 
           {/* Destiny Projection */}
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 md:p-8 shadow-sm">
@@ -357,27 +462,31 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
 
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link href="/dashboard/entry" className="group relative bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-bl-full opacity-50 group-hover:scale-110 transition-transform duration-500" />
-              <div className="relative z-10">
-                <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
-                  <PlusCircle className="w-7 h-7" />
+            <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }}>
+              <Link href="/dashboard/entry" className="block group relative h-full bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all overflow-hidden">
+                <div className={`absolute top-0 right-0 w-32 h-32 ${theme.action1Blob} rounded-bl-full opacity-50 group-hover:scale-110 transition-transform duration-500`} />
+                <div className="relative z-10">
+                  <div className={`w-14 h-14 ${theme.action1Bg} text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg ${theme.action1Shadow}`}>
+                    <PlusCircle className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Log New Semester</h3>
+                  <p className="text-gray-500 text-sm">Add your latest courses and grades to instantly update your CGPA.</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Log New Semester</h3>
-                <p className="text-gray-500 text-sm">Add your latest courses and grades to instantly update your CGPA.</p>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
 
-            <Link href="/dashboard/target" className="group relative bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 rounded-bl-full opacity-50 group-hover:scale-110 transition-transform duration-500" />
-              <div className="relative z-10">
-                <div className="w-14 h-14 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30">
-                  <Target className="w-7 h-7" />
+            <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }}>
+              <Link href="/dashboard/target" className="block group relative h-full bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all overflow-hidden">
+                <div className={`absolute top-0 right-0 w-32 h-32 ${theme.action2Blob} rounded-bl-full opacity-50 group-hover:scale-110 transition-transform duration-500`} />
+                <div className="relative z-10">
+                  <div className={`w-14 h-14 ${theme.action2Bg} text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg ${theme.action2Shadow}`}>
+                    <Target className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Target Planner</h3>
+                  <p className="text-gray-500 text-sm">Calculate exactly what grades you need next semester to hit your dream CGPA.</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Target Planner</h3>
-                <p className="text-gray-500 text-sm">Calculate exactly what grades you need next semester to hit your dream CGPA.</p>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           </div>
 
           {/* Trend Chart (Glassmorphic) */}
@@ -390,7 +499,13 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             </div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={studentData.trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <AreaChart data={studentData.trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <defs>
+                    <linearGradient id="colorGpa" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={theme.chartStop1} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={theme.chartStop2} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                   <XAxis 
                     dataKey="semester" 
@@ -407,18 +522,19 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                     dx={-10}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ fontWeight: 700 }}
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontWeight: 700, color: theme.chartStroke }}
                   />
-                  <Line 
+                  <Area 
                     type="monotone" 
                     dataKey="gpa" 
-                    stroke="#4f46e5" 
+                    stroke={theme.chartStroke} 
+                    fillOpacity={1}
+                    fill="url(#colorGpa)"
                     strokeWidth={4}
-                    dot={{ r: 6, fill: '#4f46e5', strokeWidth: 0 }}
-                    activeDot={{ r: 8, strokeWidth: 0 }}
+                    activeDot={{ r: 8, fill: theme.chartStroke, stroke: '#fff', strokeWidth: 2, className: 'drop-shadow-md' }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -514,7 +630,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             </div>
           </div>
 
-        </div>
+        </motion.div>
       </main>
 
       {/* Bottom Navigation (Mobile) */}

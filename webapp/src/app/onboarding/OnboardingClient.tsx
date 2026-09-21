@@ -3,6 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveProfile } from './actions'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Institution = {
   id: string;
@@ -72,8 +73,16 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
           <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
         </div>
 
+        <AnimatePresence mode="wait">
         {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <motion.div 
+            key="step1"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Your Institution</h2>
               <p className="text-gray-500">This configures your exact grading scale.</p>
@@ -92,7 +101,9 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
             <div className="grid gap-3 max-h-64 overflow-y-auto pr-2">
               {filteredInstitutions.length > 0 ? (
                 filteredInstitutions.map((inst) => (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     key={inst.id}
                     onClick={() => setInstitution(inst.id)}
                     className={`p-4 rounded-xl border text-left transition-all flex flex-col ${
@@ -106,7 +117,7 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                       <span>{inst.type}</span>
                       <span className="font-medium text-blue-600">{Number(inst.grading_scale).toFixed(1)} Scale</span>
                     </span>
-                  </button>
+                  </motion.button>
                 ))
               ) : (
                 <div className="text-center text-gray-500 py-4">
@@ -124,11 +135,18 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                 Continue
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {step === 2 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <motion.div 
+            key="step2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">What level are you starting from?</h2>
               <p className="text-gray-500">Direct Entry students usually start at 200L.</p>
@@ -136,7 +154,9 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
             
             <div className="grid grid-cols-2 gap-3">
               {['100', '200', '300', '400', '500', '600', '700'].map((lvl) => (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   key={lvl}
                   onClick={() => setLevel(lvl)}
                   className={`p-4 rounded-xl border text-center transition-all ${
@@ -146,7 +166,7 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                   }`}
                 >
                   {lvl} Level
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -189,8 +209,9 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                 {isPending ? 'Calculating...' : 'See My CGPA'}
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
       </div>
     </div>

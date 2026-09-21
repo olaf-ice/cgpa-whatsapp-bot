@@ -2,6 +2,10 @@
 
 import { Trophy, Medal, ChevronLeft, Lock } from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import Confetti from 'react-confetti'
+import { useWindowSize } from 'react-use'
+import { useState, useEffect } from 'react'
 
 interface Peer {
   id: string;
@@ -18,8 +22,38 @@ interface LeaderboardClientProps {
 }
 
 export default function LeaderboardClient({ peers, institutionName, courseOfStudy, scale }: LeaderboardClientProps) {
+  const { width, height } = useWindowSize()
+  const [showConfetti, setShowConfetti] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowConfetti(false), 5000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Variants for staggered list
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
+  }
+
+  const podiumVariants = {
+    hidden: { opacity: 0, scale: 0.8, y: 50 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 200, damping: 20 } }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col p-4 md:p-8 pb-24">
+      {showConfetti && peers.length > 0 && <Confetti width={width} height={height} recycle={false} numberOfPieces={300} />}
       <div className="max-w-3xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -38,9 +72,12 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
 
         {/* Podium (Top 3) */}
         {peers.length >= 3 && (
-          <div className="flex justify-center items-end gap-2 md:gap-6 mb-12 h-48 mt-8">
+          <motion.div 
+            initial="hidden" animate="show" variants={containerVariants}
+            className="flex justify-center items-end gap-2 md:gap-6 mb-12 h-48 mt-8"
+          >
             {/* Rank 2 */}
-            <div className="flex flex-col items-center w-1/3">
+            <motion.div variants={podiumVariants} className="flex flex-col items-center w-1/3">
               <div className="bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-600 shadow-sm mb-2 truncate max-w-[100px] md:max-w-none text-center">
                 {peers[1].name.split(' ')[0]}
               </div>
@@ -48,11 +85,13 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
                 <span className="text-3xl font-black text-gray-400">2</span>
                 <span className="text-xs font-bold mt-1 text-gray-600">{peers[1].cgpa.toFixed(2)}</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Rank 1 */}
-            <div className="flex flex-col items-center w-1/3 z-10">
-              <Medal className="w-10 h-10 text-yellow-500 mb-2 drop-shadow-md" />
+            <motion.div variants={podiumVariants} className="flex flex-col items-center w-1/3 z-10">
+              <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+                <Medal className="w-10 h-10 text-yellow-500 mb-2 drop-shadow-md" />
+              </motion.div>
               <div className="bg-white px-4 py-1.5 rounded-full text-sm font-black text-yellow-600 shadow-md mb-2 truncate max-w-[110px] md:max-w-none text-center border border-yellow-200">
                 {peers[0].name.split(' ')[0]}
               </div>
@@ -60,10 +99,10 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
                 <span className="text-4xl font-black text-yellow-700">1</span>
                 <span className="text-sm font-bold mt-1 text-yellow-800">{peers[0].cgpa.toFixed(2)}</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Rank 3 */}
-            <div className="flex flex-col items-center w-1/3">
+            <motion.div variants={podiumVariants} className="flex flex-col items-center w-1/3">
               <div className="bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-600 shadow-sm mb-2 truncate max-w-[100px] md:max-w-none text-center">
                 {peers[2].name.split(' ')[0]}
               </div>
@@ -71,8 +110,8 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
                 <span className="text-3xl font-black text-orange-400">3</span>
                 <span className="text-xs font-bold mt-1 text-orange-700">{peers[2].cgpa.toFixed(2)}</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
 
         {/* List */}
@@ -82,9 +121,12 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
             <span>CGPA</span>
           </div>
           
-          <div className="divide-y divide-gray-50">
+          <motion.div 
+            initial="hidden" animate="show" variants={containerVariants}
+            className="divide-y divide-gray-50"
+          >
             {peers.map((peer, idx) => (
-              <div key={peer.id || idx} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+              <motion.div variants={itemVariants} key={peer.id || idx} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 text-sm">
                     {idx + 1}
@@ -100,7 +142,7 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
                 <div className="text-right">
                   <p className="font-black text-lg text-blue-600">{peer.cgpa.toFixed(2)}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {peers.length === 0 && (
@@ -108,7 +150,7 @@ export default function LeaderboardClient({ peers, institutionName, courseOfStud
                 No students in your department have logged their grades yet. You're the pioneer!
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
 
       </div>
