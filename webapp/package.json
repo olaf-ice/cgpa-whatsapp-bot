@@ -19,6 +19,7 @@
     "react-confetti": "^6.4.0",
     "react-countup": "^6.5.3",
     "react-dom": "19.2.8",
+    "react-paystack": "^6.0.0",
     "react-use": "^17.6.1",
     "recharts": "^3.10.1"
   },

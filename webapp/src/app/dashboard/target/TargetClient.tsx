@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { usePaystackPayment } from 'react-paystack'
 import Link from 'next/link'
 import { ArrowLeft, Target, Calculator, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
@@ -9,9 +10,38 @@ interface TargetClientProps {
   totalCreditUnits: number;
   totalGradePoints: number;
   scale: number;
+  email: string;
 }
 
-export default function TargetClient({ currentCGPA, totalCreditUnits, totalGradePoints, scale }: TargetClientProps) {
+export default function TargetClient({ currentCGPA, totalCreditUnits, totalGradePoints, scale, email }: TargetClientProps) {
+
+  const config = {
+    reference: (new Date()).getTime().toString(),
+    email: email, 
+    amount: 2000 * 100, 
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "App Name",
+          variable_name: "app_name",
+          value: "cgpa_bot"
+        }
+      ]
+    }
+  };
+
+  const initializePayment = usePaystackPayment(config);
+
+  const onSuccess = (reference: any) => {
+    console.log('Payment successful. Reference:', reference);
+    alert('Payment of ₦2000 received for CGPA Bot!');
+  };
+
+  const onClose = () => {
+    console.log('Payment popup closed');
+  };
+
   const [targetCGPA, setTargetCGPA] = useState<number | ''>('')
   const [plannedUnits, setPlannedUnits] = useState<number | ''>('')
 
@@ -150,6 +180,17 @@ export default function TargetClient({ currentCGPA, totalCreditUnits, totalGrade
             )}
             
           </div>
+        </div>
+
+
+        {/* Premium Upgrade Button */}
+        <div className="mt-8 text-center">
+          <button 
+            onClick={() => { initializePayment(onSuccess as any, onClose) }}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all hover:scale-105"
+          >
+            Upgrade to Premium Tracker (₦2,000)
+          </button>
         </div>
 
       </div>

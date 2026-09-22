@@ -57,6 +57,7 @@ export default async function TargetPage() {
       totalCreditUnits={totalCreditUnits}
       totalGradePoints={totalGradePoints}
       scale={student.institution.grading_scale}
+      email={email}
     />
   )
 }
