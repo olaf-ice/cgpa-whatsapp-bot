@@ -154,24 +154,24 @@ export default function EntryClient({ studentName, institutionName, gradeBoundar
                       {index + 1}
                     </div>
 
-                    <div className="flex-1 grid grid-cols-12 gap-3 items-center">
-                      <div className="col-span-5">
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-12 gap-y-3 gap-x-2 md:gap-3 items-center">
+                      <div className="col-span-2 md:col-span-5">
                         <input
                           type="text"
                           placeholder="e.g. MTH101"
                           value={course.code}
                           onChange={e => handleCourseChange(index, 'code', e.target.value)}
-                          className="w-full bg-transparent text-gray-900 font-semibold px-2 py-2 outline-none placeholder:font-normal placeholder:text-gray-400 uppercase"
+                          className="w-full bg-transparent text-gray-900 font-semibold px-2 py-1 md:py-2 outline-none placeholder:font-normal placeholder:text-gray-400 uppercase text-lg md:text-base"
                           required
                         />
                       </div>
                       
-                      <div className="col-span-4 flex items-center gap-2 border-l border-gray-200 pl-3">
+                      <div className="col-span-1 md:col-span-4 flex items-center gap-1 md:gap-2 border-t md:border-t-0 border-r md:border-r-0 md:border-l border-gray-200 pt-2 md:pt-0 pr-2 md:pr-0 md:pl-3">
                         <span className="text-xs font-semibold text-gray-400 uppercase">Units</span>
                         <select
                           value={course.units}
                           onChange={e => handleCourseChange(index, 'units', Number(e.target.value))}
-                          className="w-full bg-transparent text-gray-900 font-semibold py-2 outline-none cursor-pointer"
+                          className="w-full bg-transparent text-gray-900 font-semibold py-1 md:py-2 outline-none cursor-pointer text-center md:text-left"
                         >
                           {[1,2,3,4,5,6].map(u => (
                             <option key={u} value={u}>{u}</option>
@@ -179,9 +179,9 @@ export default function EntryClient({ studentName, institutionName, gradeBoundar
                         </select>
                       </div>
 
-                      <div className="col-span-3 flex flex-col items-center justify-center border-l border-gray-200 pl-2">
-                         <span className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Score</span>
-                         <div className="flex items-center gap-2">
+                      <div className="col-span-1 md:col-span-3 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-gray-200 pt-1 md:pt-0 pl-1 md:pl-2">
+                         <span className="text-[10px] font-semibold text-gray-400 uppercase mb-1 md:mb-1">Score</span>
+                         <div className="flex items-center gap-1 md:gap-2">
                            <input
                             type="number"
                             min="0"
@@ -189,11 +189,11 @@ export default function EntryClient({ studentName, institutionName, gradeBoundar
                             placeholder="0-100"
                             value={course.score}
                             onChange={e => handleCourseChange(index, 'score', e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-16 bg-transparent text-gray-900 font-bold text-center outline-none border-b-2 border-transparent focus:border-blue-500 transition-colors placeholder:font-normal placeholder:text-gray-300"
+                            className="w-12 md:w-16 bg-transparent text-gray-900 font-bold text-center outline-none border-b-2 border-transparent focus:border-blue-500 transition-colors placeholder:font-normal placeholder:text-gray-300"
                             required
                           />
                           {course.score !== '' && (
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-black text-sm">
+                            <span className="inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-lg bg-blue-100 text-blue-700 font-black text-xs md:text-sm shrink-0">
                               {resolveGrade(course.score)}
                             </span>
                           )}
