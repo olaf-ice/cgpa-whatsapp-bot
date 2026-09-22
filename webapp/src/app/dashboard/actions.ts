@@ -54,3 +54,21 @@ export async function toggleEmailReminders(enabled: boolean) {
   revalidatePath('/dashboard')
   return { success: true }
 }
+
+export async function unlockAccount() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' };
+
+  const { error } = await (supabase as any)
+    .from('students')
+    .update({ has_paid: true })
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+

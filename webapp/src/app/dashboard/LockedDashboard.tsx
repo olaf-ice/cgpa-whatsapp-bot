@@ -2,6 +2,9 @@
 
 import { Lock, Brain, TrendingUp } from 'lucide-react'
 import { usePaystackPayment } from 'react-paystack'
+import { unlockAccount } from './actions'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 interface LockedDashboardProps {
   email: string;
@@ -9,6 +12,8 @@ interface LockedDashboardProps {
 }
 
 export default function LockedDashboard({ email, name }: LockedDashboardProps) {
+  const router = useRouter();
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const config = {
     reference: (new Date()).getTime().toString(),
@@ -28,9 +33,11 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
 
   const initializePayment = usePaystackPayment(config);
 
-  const onSuccess = (reference: any) => {
+  const onSuccess = async (reference: any) => {
     console.log('Payment successful. Reference:', reference);
-    alert('Payment of ₦2000 received for CGPA Bot! Admin is verifying.');
+    setIsVerifying(true);
+    await unlockAccount();
+    router.refresh();
   };
 
   const onClose = () => {
@@ -100,9 +107,10 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
               onClick={() => {
                 initializePayment({ onSuccess, onClose });
               }}
-              className="block w-full py-3 bg-[#0ba4db] hover:bg-[#0a8cb8] text-white text-center rounded-xl font-bold transition-all shadow-md shadow-blue-500/20"
+              disabled={isVerifying}
+              className="block w-full py-3 bg-[#0ba4db] hover:bg-[#0a8cb8] disabled:opacity-50 text-white text-center rounded-xl font-bold transition-all shadow-md shadow-blue-500/20"
             >
-              Pay with Paystack
+              {isVerifying ? 'Unlocking Dashboard...' : 'Pay with Paystack'}
             </button>
             <p className="text-xs text-gray-400 text-center mt-3">
               Payments are securely processed by Paystack.

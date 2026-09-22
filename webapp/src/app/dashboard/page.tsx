@@ -198,7 +198,7 @@ export default async function DashboardPage() {
 
   if (!student.has_paid) {
     const email = user.email?.toLowerCase().trim() || '';
-    const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com' || email === 'rolexcyd@gmail.com';
+    const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
     if (!student.is_admin && !isSimeon) {
       return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
     }
