@@ -85,23 +85,8 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
         {/* Payment Options */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-left">
-            <div className="space-y-3 text-sm text-gray-600 mb-6">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <span>Bank Name</span>
-                <span className="font-bold text-gray-900">Guaranty Trust Bank</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <span>Account Name</span>
-                <span className="font-bold text-gray-900">Oladipupo Timileyin Simeon</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <span>Account Number</span>
-                <span className="font-bold text-gray-900 text-lg tracking-wider">0253138467</span>
-              </div>
-              <div className="flex justify-between items-center pt-1">
-                <span>Amount</span>
-                <span className="font-black text-blue-600 text-lg">₦2,000</span>
-              </div>
+            <div className="space-y-3 text-sm text-gray-600 mb-6 text-center">
+              <span className="font-bold text-gray-900 text-lg">Amount: ₦2,000</span>
             </div>
             <button 
               onClick={() => {
