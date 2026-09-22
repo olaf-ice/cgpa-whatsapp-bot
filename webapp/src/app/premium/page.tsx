@@ -13,42 +13,10 @@ export default function PremiumPage() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full">
+      <div className="flex justify-center max-w-4xl w-full mx-auto">
         
-        {/* Basic Plan */}
-        <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Basic Calculator</h3>
-            <div className="text-4xl font-bold text-gray-900 mb-4">Free</div>
-            <p className="text-sm text-gray-500">Perfect for quick, one-off semester checks.</p>
-          </div>
-          
-          <ul className="space-y-4 flex-1 mb-8">
-            <li className="flex items-center gap-3 text-gray-700">
-              <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              Basic Semester GPA Calculation
-            </li>
-            <li className="flex items-center gap-3 text-gray-700">
-              <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              Manual Institution Grading Scale
-            </li>
-            <li className="flex items-center gap-3 text-gray-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              No Progress Saving
-            </li>
-            <li className="flex items-center gap-3 text-gray-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              No WhatsApp Integration
-            </li>
-          </ul>
-
-          <Link href="/dashboard/entry" className="w-full py-3 px-4 text-center rounded-xl font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors">
-            Continue with Free
-          </Link>
-        </div>
-
         {/* Premium Plan */}
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 shadow-2xl relative flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-1000 scale-105">
+        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 shadow-2xl relative flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-1000 w-full max-w-md">
           <div className="absolute top-0 right-8 transform -translate-y-1/2">
             <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full">
               Recommended

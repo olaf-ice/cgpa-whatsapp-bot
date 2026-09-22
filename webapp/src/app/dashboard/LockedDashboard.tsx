@@ -1,6 +1,7 @@
 'use client'
 
 import { Lock, Brain, TrendingUp } from 'lucide-react'
+import { usePaystackPayment } from 'react-paystack'
 
 interface LockedDashboardProps {
   email: string;
@@ -8,6 +9,34 @@ interface LockedDashboardProps {
 }
 
 export default function LockedDashboard({ email, name }: LockedDashboardProps) {
+
+  const config = {
+    reference: (new Date()).getTime().toString(),
+    email: email,
+    amount: 2000 * 100, // 2000 NGN in kobo
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "App Name",
+          variable_name: "app_name",
+          value: "cgpa_bot"
+        }
+      ]
+    }
+  };
+
+  const initializePayment = usePaystackPayment(config);
+
+  const onSuccess = (reference: any) => {
+    console.log('Payment successful. Reference:', reference);
+    alert('Payment of ₦2000 received for CGPA Bot! Admin is verifying.');
+  };
+
+  const onClose = () => {
+    console.log('Payment popup closed');
+  };
+
   return (
     <div className="relative min-h-screen bg-slate-50 flex flex-col items-center justify-center overflow-hidden p-4">
       {/* Blurred background mock of the dashboard */}
