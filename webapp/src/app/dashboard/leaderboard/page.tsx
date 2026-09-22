@@ -21,14 +21,16 @@ export default async function LeaderboardPage() {
     redirect('/onboarding')
   }
 
-  // 2. Fetch leaderboard (Top 50 students in same institution and course)
-  const { data: peers } = await (supabase as any)
-    .from('students')
-    .select('id, name, opt_in_leaderboard, current_cgpa, entry_level, current_level')
-    .eq('institution_id', currentStudent.institution_id)
-    .eq('course_of_study', currentStudent.course_of_study)
-    .order('current_cgpa', { ascending: false })
-    .limit(50)
+  // 2. Fetch leaderboard (Top 50 students in same institution and course via secure RPC)
+  const { data: peers, error: rpcError } = await (supabase as any)
+    .rpc('get_leaderboard', {
+      p_institution_id: currentStudent.institution_id,
+      p_course_of_study: currentStudent.course_of_study
+    });
+
+  if (rpcError) {
+    console.error('Leaderboard RPC error:', rpcError);
+  }
 
   // 3. Format the data for the client
   const formattedPeers = (peers || []).map((p: any) => ({
