@@ -186,7 +186,7 @@ export default function TargetClient({ currentCGPA, totalCreditUnits, totalGrade
         {/* Premium Upgrade Button */}
         <div className="mt-8 text-center">
           <button 
-            onClick={() => { initializePayment(onSuccess as any, onClose) }}
+            onClick={() => { initializePayment({ onSuccess: onSuccess as any, onClose }) }}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all hover:scale-105"
           >
             Upgrade to Premium Tracker (₦2,000)
