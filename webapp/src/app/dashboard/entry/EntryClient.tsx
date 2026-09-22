@@ -9,20 +9,25 @@ interface EntryClientProps {
   studentName: string
   institutionName: string
   gradeBoundaries: any
+  initialLevel?: number
+  initialTerm?: number
+  initialCourses?: any[]
 }
 
 type ClientCourseEntry = Omit<CourseEntry, 'score'> & { score: number | '' };
 
-export default function EntryClient({ studentName, institutionName, gradeBoundaries }: EntryClientProps) {
+export default function EntryClient({ studentName, institutionName, gradeBoundaries, initialLevel, initialTerm, initialCourses }: EntryClientProps) {
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const [level, setLevel] = useState<number>(100)
-  const [term, setTerm] = useState<number>(1)
+  const [level, setLevel] = useState<number>(initialLevel || 100)
+  const [term, setTerm] = useState<number>(initialTerm || 1)
   
-  const [courses, setCourses] = useState<ClientCourseEntry[]>([
-    { code: '', units: 3, score: '' }
-  ])
+  const [courses, setCourses] = useState<ClientCourseEntry[]>(
+    initialCourses && initialCourses.length > 0 
+      ? initialCourses 
+      : [{ code: '', units: 3, score: '' }]
+  )
 
   const handleAddCourse = () => {
     setCourses([...courses, { code: '', units: 3, score: '' }])

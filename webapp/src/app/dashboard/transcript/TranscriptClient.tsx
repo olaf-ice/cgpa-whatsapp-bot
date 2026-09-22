@@ -78,7 +78,12 @@ export default function TranscriptClient({ student, semesters }: TranscriptClien
               return (
                 <div key={sem.id || idx} className="break-inside-avoid">
                   <div className="flex justify-between items-end border-b-2 border-gray-200 pb-2 mb-4">
-                    <h3 className="text-xl font-bold">{sem.level} Level • Term {sem.term}</h3>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-xl font-bold">{sem.level} Level • Term {sem.term}</h3>
+                      <Link href={`/dashboard/entry?editLevel=${sem.level}&editTerm=${sem.term}`} className="print:hidden text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-3 py-1 rounded-lg transition-colors">
+                        Edit
+                      </Link>
+                    </div>
                     <div className="text-right">
                       <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">GPA: </span>
                       <span className="text-lg font-black">{semGPA.toFixed(2)}</span>

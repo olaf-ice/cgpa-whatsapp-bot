@@ -365,7 +365,9 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                 </div>
               </div>
               <div className="flex gap-2">
-                {/* PDF Transcript and Share Rank buttons hidden for Phase 1 */}
+                <Link href="/dashboard/transcript" className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all">
+                  View Records
+                </Link>
               </div>
             </div>
           </div>

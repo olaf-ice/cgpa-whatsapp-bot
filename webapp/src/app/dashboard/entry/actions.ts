@@ -33,6 +33,7 @@ export async function saveSemester(data: { level: number, term: number, courses:
 
   // 2. Insert or Fetch Semester
   let semesterId: string;
+  let isExistingSemester = false;
   const { data: semester, error: semesterError } = await (supabase as any)
     .from('semesters')
     .insert({
@@ -58,11 +59,19 @@ export async function saveSemester(data: { level: number, term: number, courses:
         return { error: 'Failed to access your existing semester.' }
       }
       semesterId = existingSem.id;
+      isExistingSemester = true;
     } else {
       return { error: semesterError.message }
     }
   } else {
     semesterId = semester.id;
+  }
+
+  if (isExistingSemester) {
+    await (supabase as any)
+      .from('grades')
+      .delete()
+      .eq('semester_id', semesterId);
   }
 
   // Helper to find the correct grade based on a numeric score
