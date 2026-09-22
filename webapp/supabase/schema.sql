@@ -141,3 +141,30 @@ CREATE TABLE grades (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- RLS Policies
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE semesters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own profile" ON students FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own profile" ON students FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can read their own profile" ON students FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Public profiles are viewable by everyone" ON students FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own semesters" ON semesters FOR INSERT WITH CHECK (
+    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
+);
+CREATE POLICY "Users can update their own semesters" ON semesters FOR UPDATE USING (
+    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
+);
+CREATE POLICY "Users can read their own semesters" ON semesters FOR SELECT USING (
+    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
+);
+CREATE POLICY "Users can delete their own semesters" ON semesters FOR DELETE USING (
+    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
+);
+
+CREATE POLICY "Users can manage their own grades" ON grades FOR ALL USING (
+    semester_id IN (SELECT id FROM semesters WHERE student_id IN (SELECT id FROM students WHERE user_id = auth.uid()))
+);

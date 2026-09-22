@@ -152,22 +152,33 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
               <p className="text-gray-500">Direct Entry students usually start at 200L.</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
-              {['100', '200', '300', '400', '500', '600', '700'].map((lvl) => (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  key={lvl}
-                  onClick={() => setLevel(lvl)}
-                  className={`p-4 rounded-xl border text-center transition-all ${
-                    level === lvl 
-                      ? `border-transparent bg-gradient-to-br ${getThemeClasses()} text-white font-bold shadow-md` 
-                      : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
-                  }`}
-                >
-                  {lvl} Level
-                </motion.button>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[100, 200, 300, 400, 500, 600].map((lvl) => {
+                let displayLevel = `${lvl} Level`;
+                if (selectedInstData?.type === 'Polytechnic') {
+                  if (lvl === 100) displayLevel = 'ND 1';
+                  else if (lvl === 200) displayLevel = 'ND 2';
+                  else if (lvl === 300) displayLevel = 'HND 1';
+                  else if (lvl === 400) displayLevel = 'HND 2';
+                  else return null;
+                }
+
+                return (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    key={lvl}
+                    onClick={() => setLevel(lvl.toString())}
+                    className={`p-4 rounded-xl border text-center font-bold transition-all ${
+                      level === lvl.toString() 
+                        ? `border-transparent bg-gradient-to-br ${getThemeClasses()} text-white shadow-md` 
+                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                    }`}
+                  >
+                    {displayLevel}
+                  </motion.button>
+                );
+              })}
             </div>
 
             {isEditing && (
@@ -195,7 +206,14 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
               <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Summary</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>{selectedInstData?.name}</li>
-                <li>Starting at {level} Level</li>
+                <li>Starting at {
+                  selectedInstData?.type === 'Polytechnic' ? (
+                    level === '100' ? 'ND 1' :
+                    level === '200' ? 'ND 2' :
+                    level === '300' ? 'HND 1' :
+                    level === '400' ? 'HND 2' : `${level} Level`
+                  ) : `${level} Level`
+                }</li>
               </ul>
             </div>
 

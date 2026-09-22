@@ -83,8 +83,16 @@ export default async function DashboardPage() {
       }
 
       const semGPA = semUnits > 0 ? (semPoints / semUnits) : 0;
+      let levelLabel = `${sem.level}L`;
+      if (student.institution?.type === 'Polytechnic') {
+        if (sem.level === 100) levelLabel = 'ND 1';
+        else if (sem.level === 200) levelLabel = 'ND 2';
+        else if (sem.level === 300) levelLabel = 'HND 1';
+        else if (sem.level === 400) levelLabel = 'HND 2';
+      }
+
       trendData.push({
-        semester: `${sem.level}L T${sem.term}`,
+        semester: `${levelLabel} T${sem.term}`,
         gpa: Number(semGPA.toFixed(2))
       });
     });
