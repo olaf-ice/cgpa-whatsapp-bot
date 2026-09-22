@@ -96,16 +96,16 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
                 <span className="font-black text-blue-600 text-lg">₦2,000</span>
               </div>
             </div>
-            <a 
-              href={`https://wa.me/2349079131502?text=Hello,%20I%20just%20paid%20for%20the%20CGPA%20Bot.%20My%20email%20is%20${email}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white text-center rounded-xl font-bold transition-all shadow-md shadow-green-500/20"
+            <button 
+              onClick={() => {
+                initializePayment({ onSuccess, onClose });
+              }}
+              className="block w-full py-3 bg-[#0ba4db] hover:bg-[#0a8cb8] text-white text-center rounded-xl font-bold transition-all shadow-md shadow-blue-500/20"
             >
-              I have sent the money
-            </a>
+              Pay with Paystack
+            </button>
             <p className="text-xs text-gray-400 text-center mt-3">
-              Admin will manually unlock your account after verifying payment.
+              Payments are securely processed by Paystack.
             </p>
           </div>
         </div>
