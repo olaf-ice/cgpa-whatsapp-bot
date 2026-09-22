@@ -5,8 +5,6 @@
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE semesters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gpa_targets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE target_courses ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if any to prevent conflicts
 DROP POLICY IF EXISTS "Users can insert their own profile" ON students;
@@ -20,39 +18,29 @@ DROP POLICY IF EXISTS "Users can read their own semesters" ON semesters;
 DROP POLICY IF EXISTS "Users can delete their own semesters" ON semesters;
 
 DROP POLICY IF EXISTS "Users can manage their own grades" ON grades;
-DROP POLICY IF EXISTS "Users can manage their own gpa_targets" ON gpa_targets;
-DROP POLICY IF EXISTS "Users can manage their own target_courses" ON target_courses;
 
 -- Strict Students table policies (ONLY owner can read/write their own row)
-CREATE POLICY "Users can insert their own profile" ON students FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own profile" ON students FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can read their own profile" ON students FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own profile" ON students FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own profile" ON students FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Users can read their own profile" ON students FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
 -- Semesters table policies
-CREATE POLICY "Users can insert their own semesters" ON semesters FOR INSERT WITH CHECK (
+CREATE POLICY "Users can insert their own semesters" ON semesters FOR INSERT TO authenticated WITH CHECK (
     student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
 );
-CREATE POLICY "Users can update their own semesters" ON semesters FOR UPDATE USING (
+CREATE POLICY "Users can update their own semesters" ON semesters FOR UPDATE TO authenticated USING (
     student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
 );
-CREATE POLICY "Users can read their own semesters" ON semesters FOR SELECT USING (
+CREATE POLICY "Users can read their own semesters" ON semesters FOR SELECT TO authenticated USING (
     student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
 );
-CREATE POLICY "Users can delete their own semesters" ON semesters FOR DELETE USING (
+CREATE POLICY "Users can delete their own semesters" ON semesters FOR DELETE TO authenticated USING (
     student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
 );
 
 -- Grades table policies
-CREATE POLICY "Users can manage their own grades" ON grades FOR ALL USING (
+CREATE POLICY "Users can manage their own grades" ON grades FOR ALL TO authenticated USING (
     semester_id IN (SELECT id FROM semesters WHERE student_id IN (SELECT id FROM students WHERE user_id = auth.uid()))
-);
-
--- Target tables policies
-CREATE POLICY "Users can manage their own gpa_targets" ON gpa_targets FOR ALL USING (
-    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
-);
-CREATE POLICY "Users can manage their own target_courses" ON target_courses FOR ALL USING (
-    target_id IN (SELECT id FROM gpa_targets WHERE student_id IN (SELECT id FROM students WHERE user_id = auth.uid()))
 );
 
 -- RPC Function for Leaderboard (Bypasses RLS to safely return ONLY public fields)

@@ -146,8 +146,6 @@ CREATE TABLE grades (
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE semesters ENABLE ROW LEVEL SECURITY;
 ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gpa_targets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE target_courses ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can insert their own profile" ON students FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own profile" ON students FOR UPDATE USING (auth.uid() = user_id);
@@ -168,13 +166,6 @@ CREATE POLICY "Users can delete their own semesters" ON semesters FOR DELETE USI
 
 CREATE POLICY "Users can manage their own grades" ON grades FOR ALL USING (
     semester_id IN (SELECT id FROM semesters WHERE student_id IN (SELECT id FROM students WHERE user_id = auth.uid()))
-);
-
-CREATE POLICY "Users can manage their own gpa_targets" ON gpa_targets FOR ALL USING (
-    student_id IN (SELECT id FROM students WHERE user_id = auth.uid())
-);
-CREATE POLICY "Users can manage their own target_courses" ON target_courses FOR ALL USING (
-    target_id IN (SELECT id FROM gpa_targets WHERE student_id IN (SELECT id FROM students WHERE user_id = auth.uid()))
 );
 
 -- RPC Function for Leaderboard (Bypasses RLS to safely return ONLY public fields)
