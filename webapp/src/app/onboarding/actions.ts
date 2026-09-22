@@ -18,52 +18,16 @@ export async function saveProfile(data: { name: string, matric_number: string, i
     return { error: 'Invalid institution selected.' }
   }
 
-  const { data: existingStudent, error: selectError } = await (supabase as any)
-    .from('students')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  const { error: rpcError } = await (supabase as any).rpc('save_profile', {
+    p_name: data.name,
+    p_matric: data.matric_number,
+    p_institution: data.institution_id,
+    p_course: data.course,
+    p_level: data.level
+  });
 
-  if (selectError) {
-    return { error: 'Error checking profile: ' + selectError.message };
-  }
-
-  if (existingStudent) {
-    const { error } = await (supabase as any).from('students').update({
-      name: data.name,
-      matric_number: data.matric_number,
-      institution_id: data.institution_id,
-      course_of_study: data.course,
-      entry_level: data.level,
-      current_level: data.level
-    }).eq('user_id', user.id);
-    if (error) return { error: error.message };
-  } else {
-    const { error: insertError } = await (supabase as any).from('students').insert({
-      user_id: user.id,
-      name: data.name,
-      matric_number: data.matric_number,
-      institution_id: data.institution_id,
-      course_of_study: data.course,
-      entry_level: data.level,
-      current_level: data.level,
-    });
-    // Fallback: If it STILL says duplicate key, it means a race condition or caching hid the record. Force an update.
-    if (insertError) {
-      if (insertError.code === '23505') { 
-        const { error: fallbackError } = await (supabase as any).from('students').update({
-          name: data.name,
-          matric_number: data.matric_number,
-          institution_id: data.institution_id,
-          course_of_study: data.course,
-          entry_level: data.level,
-          current_level: data.level
-        }).eq('user_id', user.id);
-        if (fallbackError) return { error: fallbackError.message };
-      } else {
-        return { error: insertError.message };
-      }
-    }
+  if (rpcError) {
+    return { error: 'Error saving profile: ' + rpcError.message };
   }
 
   redirect('/dashboard')

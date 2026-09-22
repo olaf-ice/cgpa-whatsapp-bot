@@ -196,3 +196,35 @@ BEGIN
     LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;
+
+-- RPC Function to safely save user profile without hitting RLS insert issues
+CREATE OR REPLACE FUNCTION save_profile(
+    p_name VARCHAR,
+    p_matric VARCHAR,
+    p_institution UUID,
+    p_course VARCHAR,
+    p_level INTEGER
+) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    v_user_id := auth.uid();
+    
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    INSERT INTO students (user_id, name, matric_number, institution_id, course_of_study, entry_level, current_level)
+    VALUES (v_user_id, p_name, p_matric, p_institution, p_course, p_level, p_level)
+    ON CONFLICT (user_id) DO UPDATE SET
+        name = EXCLUDED.name,
+        matric_number = EXCLUDED.matric_number,
+        institution_id = EXCLUDED.institution_id,
+        course_of_study = EXCLUDED.course_of_study,
+        entry_level = EXCLUDED.entry_level,
+        current_level = EXCLUDED.current_level;
+END;
+$$;
