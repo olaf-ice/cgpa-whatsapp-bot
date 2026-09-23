@@ -111,12 +111,21 @@ export default async function DashboardPage() {
     }
   });
 
-  // --- Peer Benchmarking ---
-  const { data: peers } = await (supabase as any)
-    .from('students')
-    .select('id, semesters(grades(credit_units, points))')
-    .eq('institution_id', student.institution_id)
-    .eq('course_of_study', student.course_of_study)
+  // --- Concurrently fetch Peers and Referrals ---
+  const [
+    { data: peers },
+    { count: referralsCount }
+  ] = await Promise.all([
+    (supabase as any)
+      .from('students')
+      .select('id, semesters(grades(credit_units, points))')
+      .eq('institution_id', student.institution_id)
+      .eq('course_of_study', student.course_of_study),
+    (supabase as any)
+      .from('students')
+      .select('*', { count: 'exact', head: true })
+      .eq('referred_by', student.id)
+  ]);
 
   let percentileRank = 1; // Default top 1% if alone
   let numericRank = 1;
@@ -166,12 +175,6 @@ export default async function DashboardPage() {
       coachInsight = "Your performance is highly balanced across all course weights. Keep up this consistent effort!";
     }
   }
-
-  // Referral stats
-  const { count: referralsCount } = await (supabase as any)
-    .from('students')
-    .select('*', { count: 'exact', head: true })
-    .eq('referred_by', student.id);
 
   const liveStudentData = {
     name: student.name,
