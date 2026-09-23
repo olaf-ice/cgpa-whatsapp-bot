@@ -7,8 +7,9 @@ const LockedDashboard = dynamic(() => import('./LockedDashboard'), { ssr: false 
 interface LockedDashboardWrapperProps {
   email: string;
   name: string;
+  amount: number;
 }
 
-export default function LockedDashboardWrapper({ email, name }: LockedDashboardWrapperProps) {
-  return <LockedDashboard email={email} name={name} />
+export default function LockedDashboardWrapper({ email, name, amount }: LockedDashboardWrapperProps) {
+  return <LockedDashboard email={email} name={name} amount={amount} />
 }

@@ -9,16 +9,17 @@ import { useState } from 'react'
 interface LockedDashboardProps {
   email: string;
   name: string;
+  amount: number;
 }
 
-export default function LockedDashboard({ email, name }: LockedDashboardProps) {
+export default function LockedDashboard({ email, name, amount }: LockedDashboardProps) {
   const router = useRouter();
   const [isVerifying, setIsVerifying] = useState(false);
 
   const config = {
     reference: (new Date()).getTime().toString(),
     email: email,
-    amount: 2000 * 100, // 2000 NGN in kobo
+    amount: amount * 100, // Amount in kobo
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
     metadata: {
       custom_fields: [
@@ -86,7 +87,7 @@ export default function LockedDashboard({ email, name }: LockedDashboardProps) {
         <div className="space-y-6">
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-left">
             <div className="space-y-3 text-sm text-gray-600 mb-6 text-center">
-              <span className="font-bold text-gray-900 text-lg">Amount: ₦2,000</span>
+              <span className="font-bold text-gray-900 text-lg">Amount: ₦{amount.toLocaleString()}</span>
             </div>
             <button 
               onClick={() => {

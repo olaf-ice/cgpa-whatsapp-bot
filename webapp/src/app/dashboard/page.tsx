@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     .from('students')
     .select(`
       *,
-      institution:institutions(name, grading_scale),
+      institution:institutions(name, type, grading_scale),
       semesters(
         level, term,
         grades(course_code, grade, credit_units, points)
@@ -200,7 +200,21 @@ export default async function DashboardPage() {
     const email = user.email?.toLowerCase().trim() || '';
     const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
     if (!student.is_admin && !isSimeon) {
-      return <LockedDashboardWrapper email={user.email || ''} name={student.name} />
+      // Calculate dynamic pricing based on institution type
+      let paymentAmount = 2000; // default
+      const instType = student.institution?.type || '';
+      
+      if (instType === 'Federal University') {
+        paymentAmount = 3000;
+      } else if (instType === 'State University') {
+        paymentAmount = 3000;
+      } else if (instType === 'Private University') {
+        paymentAmount = 5000;
+      } else if (instType === 'Polytechnic') {
+        paymentAmount = 2500;
+      }
+
+      return <LockedDashboardWrapper email={user.email || ''} name={student.name} amount={paymentAmount} />
     }
   }
 
