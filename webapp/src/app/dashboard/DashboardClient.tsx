@@ -270,10 +270,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Edit Profile
           </Link>
-          <Link href="/premium" className="flex items-center gap-3 px-4 py-3 text-amber-600 hover:bg-amber-50 rounded-xl font-medium transition-all group mt-4 border border-amber-100">
-            <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            Premium
-          </Link>
+
         </nav>
 
         <div className="mt-auto pt-6 border-t border-gray-200/60">
