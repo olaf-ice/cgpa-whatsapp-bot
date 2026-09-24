@@ -1,10 +1,10 @@
 'use server'
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function saveProfile(data: { name: string, matric_number: string, institution_id: string, course: string, level: number, referredBy?: string | null }) {
+export async function saveProfile(data: { name: string, matric_number: string, institution_id: string, course: string, level: number, target_graduation_units?: number | null, referredBy?: string | null }) {
   const supabase = await createClient()
   
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -28,6 +28,10 @@ export async function saveProfile(data: { name: string, matric_number: string, i
 
   if (rpcError) {
     return { error: 'Error saving profile: ' + rpcError.message };
+  }
+
+  if (data.target_graduation_units) {
+    await supabase.from('students').update({ target_graduation_units: data.target_graduation_units }).eq('user_id', user.id);
   }
 
   redirect('/dashboard')

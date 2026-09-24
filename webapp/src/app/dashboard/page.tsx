@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch student, institution, and their semesters with grades
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('students')
     .select(`
       *,
@@ -116,12 +116,12 @@ export default async function DashboardPage() {
     { data: peers },
     { count: referralsCount }
   ] = await Promise.all([
-    (supabase as any)
+    supabase
       .from('students')
       .select('id, semesters(grades(credit_units, points))')
       .eq('institution_id', student.institution_id)
       .eq('course_of_study', student.course_of_study),
-    (supabase as any)
+    supabase
       .from('students')
       .select('*', { count: 'exact', head: true })
       .eq('referred_by', student.id)
@@ -196,7 +196,8 @@ export default async function DashboardPage() {
     isAnonymous: user.is_anonymous === true,
     outstandingCarryovers,
     totalUnitsRegistered: totalCreditUnits,
-    totalUnitsPassed
+    totalUnitsPassed,
+    targetGraduationUnits: student.target_graduation_units
   }
 
   if (!student.has_paid) {

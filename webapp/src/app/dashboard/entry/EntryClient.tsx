@@ -16,7 +16,7 @@ interface EntryClientProps {
 
 type ClientCourseEntry = Omit<CourseEntry, 'score'> & { score: number | '' };
 
-export default function EntryClient({ studentName, institutionName, gradeBoundaries, initialLevel, initialTerm, initialCourses }: EntryClientProps) {
+export default function EntryClient({ studentName: _studentName, institutionName, gradeBoundaries, initialLevel, initialTerm, initialCourses }: EntryClientProps) {
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 

@@ -13,7 +13,7 @@ type Institution = {
 }
 
 export default function OnboardingClient({ institutions, referredBy, existingProfile }: { institutions: Institution[], referredBy: string | null, existingProfile?: any }) {
-  const router = useRouter()
+  const _router = useRouter()
   const [isPending, startTransition] = useTransition()
   
   const isEditing = !!existingProfile;
@@ -25,6 +25,7 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
   const [name, setName] = useState<string>(existingProfile?.name && existingProfile?.name !== 'Student' ? existingProfile.name : '')
   const [matricNumber, setMatricNumber] = useState<string>(existingProfile?.matric_number || '')
   const [courseOfStudy, setCourseOfStudy] = useState<string>(existingProfile?.course_of_study || '')
+  const [targetGraduationUnits, setTargetGraduationUnits] = useState<string>(existingProfile?.target_graduation_units?.toString() || '120')
   
   const selectedInstData = institutions.find(i => i.id === institution)
 
@@ -54,6 +55,7 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
         institution_id: institution,
         course: courseOfStudy,
         level: parseInt(level),
+        target_graduation_units: parseInt(targetGraduationUnits) || null,
         referredBy
       })
       
@@ -201,6 +203,15 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                 </div>
               </div>
             )}
+
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Graduation Target</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Required Units to Graduate</label>
+                <input type="number" value={targetGraduationUnits} onChange={e => setTargetGraduationUnits(e.target.value)} placeholder="e.g. 120" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p className="text-xs text-gray-500 mt-2">Most 4-year degree programs require 120 units to graduate.</p>
+              </div>
+            </div>
 
             <div className="p-4 bg-gray-50 rounded-xl mt-6 border border-gray-100">
               <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Summary</h4>

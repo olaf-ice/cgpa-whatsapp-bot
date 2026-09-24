@@ -37,7 +37,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Relationships: any[]
+        Relationships: unknown[]
       }
       students: {
         Row: {
@@ -48,6 +48,7 @@ export interface Database {
           course_of_study: string
           entry_level: number
           current_level: number
+          target_graduation_units: number | null
           created_at: string
           updated_at: string
         }
@@ -59,6 +60,7 @@ export interface Database {
           course_of_study: string
           entry_level?: number
           current_level?: number
+          target_graduation_units?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -70,10 +72,11 @@ export interface Database {
           course_of_study?: string
           entry_level?: number
           current_level?: number
+          target_graduation_units?: number | null
           created_at?: string
           updated_at?: string
         }
-        Relationships: any[]
+        Relationships: unknown[]
       }
       courses: {
         Row: {
@@ -106,7 +109,7 @@ export interface Database {
           term?: number
           created_at?: string
         }
-        Relationships: any[]
+        Relationships: unknown[]
       }
       semesters: {
         Row: {
@@ -133,7 +136,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Relationships: any[]
+        Relationships: unknown[]
       }
       grades: {
         Row: {
@@ -169,7 +172,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Relationships: any[]
+        Relationships: unknown[]
       }
     }
   }

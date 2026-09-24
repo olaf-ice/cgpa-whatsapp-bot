@@ -21,7 +21,7 @@ interface LeaderboardClientProps {
   scale: number;
 }
 
-export default function LeaderboardClient({ peers, institutionName, courseOfStudy, scale }: LeaderboardClientProps) {
+export default function LeaderboardClient({ peers, institutionName, courseOfStudy, scale: _scale }: LeaderboardClientProps) {
   const { width, height } = useWindowSize()
   const [showConfetti, setShowConfetti] = useState(true)
 

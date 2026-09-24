@@ -17,7 +17,7 @@ export default function Home() {
             C
           </div>
           <span className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-indigo-900 tracking-tight">
-            FirstClass.ng
+            MyGPA.com.ng
           </span>
         </div>
 

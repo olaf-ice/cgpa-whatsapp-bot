@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, MessageCircle, CheckCircle, Brain, Mail, GraduationCap, ShieldAlert, Download, MessageSquare, Users } from 'lucide-react'
+import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, Mail, ShieldAlert, Users } from 'lucide-react'
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
 import CountUp from 'react-countup'
-import { savePhoneNumber, toggleEmailReminders } from './actions'
+import { toggleEmailReminders } from './actions'
 
 const getThemeColors = (institution: string) => {
   const instLower = institution.toLowerCase();
@@ -102,16 +102,31 @@ interface DashboardClientProps {
     outstandingCarryovers?: { code: string, level: number, term: number, units: number }[];
     totalUnitsRegistered?: number;
     totalUnitsPassed?: number;
+    targetGraduationUnits?: number;
   }
 }
 
 export default function DashboardClient({ studentData }: DashboardClientProps) {
-  const [phone, setPhone] = useState(studentData.phoneNumber || '')
-  const [isPending, startTransition] = useTransition()
-  const [phoneSuccess, setPhoneSuccess] = useState(false)
-  const [phoneError, setPhoneError] = useState<string|null>(null)
+
+  const [, startTransition] = useTransition()
+  
+  
   const [emailEnabled, setEmailEnabled] = useState(studentData.emailRemindersEnabled ?? true)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [showCarryoverModal, setShowCarryoverModal] = useState(false)
+
+  useEffect(() => {
+    const hasCarryovers = studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0;
+    if (hasCarryovers) {
+      const hasSeen = sessionStorage.getItem('hasSeenCarryoverModal');
+      if (!hasSeen) {
+        setTimeout(() => {
+          setShowCarryoverModal(true);
+          sessionStorage.setItem('hasSeenCarryoverModal', 'true');
+        }, 0);
+      }
+    }
+  }, [studentData.outstandingCarryovers]);
 
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -130,20 +145,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
     });
   }
 
-  const handleSavePhone = () => {
-    setPhoneError(null)
-    setPhoneSuccess(false)
-    if (!phone.trim()) return;
-
-    startTransition(async () => {
-      const result = await savePhoneNumber(phone)
-      if (result?.error) {
-        setPhoneError(result.error)
-      } else {
-        setPhoneSuccess(true)
-      }
-    })
-  }
+  // handleSavePhone was here
 
   const getDegreeClass = (cgpa: number) => {
     if (studentData.scale === 7.0) {
@@ -181,7 +183,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
         const image = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.href = image;
-        link.download = `FirstClass_NG_${studentData.name.replace(/\s+/g, '_')}.png`;
+        link.download = `MyGPA_${studentData.name.replace(/\s+/g, '_')}.png`;
         link.click();
       }
     } catch (e) {
@@ -192,7 +194,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
     }
   }
 
-  const degreeClass = getDegreeClass(studentData.currentCGPA)
+  // degreeClass unused
   
   // Probation logic
   const isProbationRisk = studentData.scale === 5.0 ? studentData.currentCGPA < 1.5 : studentData.currentCGPA < 2.0;
@@ -204,6 +206,62 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
   const projectedDegree = getDegreeClass(projectedBoost);
   
   const theme = getThemeColors(studentData.institution);
+
+  // Target Calculator logic
+  let targetCalculatorUI = null;
+  if (studentData.targetGraduationUnits && studentData.totalUnitsRegistered !== undefined && studentData.currentCGPA !== undefined) {
+    const unitsRemaining = studentData.targetGraduationUnits - (studentData.totalUnitsPassed || 0);
+    if (unitsRemaining > 0) {
+      const currentPoints = studentData.currentCGPA * studentData.totalUnitsRegistered;
+      const expectedTotalRegistered = studentData.totalUnitsRegistered + unitsRemaining;
+      
+      const calculateRequiredGPA = (targetCGPA: number) => {
+        const requiredTotalPoints = targetCGPA * expectedTotalRegistered;
+        const pointsNeeded = requiredTotalPoints - currentPoints;
+        const requiredGPA = pointsNeeded / unitsRemaining;
+        return requiredGPA;
+      }
+
+      const reqFirstClass = calculateRequiredGPA(studentData.scale === 5.0 ? 4.5 : 3.5);
+      const reqSecondUpper = calculateRequiredGPA(studentData.scale === 5.0 ? 3.5 : 3.0);
+
+      targetCalculatorUI = (
+        <div className="bg-white/60 backdrop-blur-xl border border-gray-200/50 rounded-3xl p-6 md:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+              <Target className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Graduation Target Calculator</h3>
+          </div>
+          <p className="text-gray-600 mb-6 text-sm">
+            You have <strong className="text-gray-900">{unitsRemaining} units left</strong> to pass. Here is the average GPA you need in those remaining units to hit your target class of degree:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`p-4 rounded-2xl border ${reqFirstClass <= studentData.scale && reqFirstClass > 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{studentData.scale === 5.0 ? 'First Class' : 'Distinction'}</p>
+              {reqFirstClass > studentData.scale ? (
+                <p className="text-sm font-bold text-gray-400 mt-2">Mathematically impossible 😔</p>
+              ) : reqFirstClass <= 0 ? (
+                <p className="text-sm font-bold text-emerald-600 mt-2">You've already secured this! 🎉</p>
+              ) : (
+                <p className="text-3xl font-black text-emerald-600">{reqFirstClass.toFixed(2)} <span className="text-sm font-semibold text-emerald-700">GPA required</span></p>
+              )}
+            </div>
+            <div className={`p-4 rounded-2xl border ${reqSecondUpper <= studentData.scale && reqSecondUpper > 0 ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{studentData.scale === 5.0 ? 'Second Class Upper' : 'Upper Credit'}</p>
+              {reqSecondUpper > studentData.scale ? (
+                <p className="text-sm font-bold text-gray-400 mt-2">Mathematically impossible 😔</p>
+              ) : reqSecondUpper <= 0 ? (
+                <p className="text-sm font-bold text-blue-600 mt-2">You've already secured this! 🎉</p>
+              ) : (
+                <p className="text-3xl font-black text-blue-600">{reqSecondUpper.toFixed(2)} <span className="text-sm font-semibold text-blue-700">GPA required</span></p>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
 
   return (
     <div className={`flex h-screen bg-gray-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.bgGradient} overflow-hidden relative`}>
@@ -229,7 +287,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <div className="flex items-center justify-between border-t border-white/20 pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-900 font-black text-xl">C</div>
-                <span className="font-black text-xl">FirstClass.ng</span>
+                <span className="font-black text-xl">MyGPA.com.ng</span>
               </div>
               <p className="text-blue-200 font-bold">Top {studentData.percentileRank}%</p>
             </div>
@@ -243,7 +301,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             C
           </div>
           <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.textGradient}`}>
-            FirstClass.ng
+            MyGPA.com.ng
           </span>
         </div>
 
@@ -322,19 +380,35 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
 
           {/* Outstanding Carryovers Warning */}
           {studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0 && (
-            <div className="bg-orange-500 text-white p-6 rounded-3xl shadow-xl shadow-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-4">
-               <div>
-                 <h3 className="font-black text-xl flex items-center gap-2">
-                    🚨 Outstanding Carryovers
-                 </h3>
-                 <p className="font-medium mt-1 opacity-90">
-                    You have {studentData.outstandingCarryovers.length} course(s) you must retake and pass to graduate: 
-                    <strong className="block mt-1 text-lg">
-                      {studentData.outstandingCarryovers.map(c => c.code).join(', ')}
-                    </strong>
-                 </p>
-               </div>
-            </div>
+             <div className="bg-red-50 border border-red-100 rounded-3xl p-6 md:p-8 shadow-sm">
+               <div className="flex items-start gap-4">
+                 <div className="p-3 bg-red-100 text-red-600 rounded-2xl shrink-0">
+                   <ShieldAlert className="w-8 h-8" />
+                 </div>
+                 <div className="w-full">
+                   <h3 className="text-xl font-bold text-red-900 mb-2">
+                     🚨 Outstanding Carryovers
+                   </h3>
+                   <p className="text-red-800 font-medium mb-4">
+                     You have {studentData.outstandingCarryovers.length} course(s) you must retake and pass to graduate. Here is when you can register for them:
+                   </p>
+                   <div className="flex flex-col gap-3 max-w-sm">
+                     {studentData.outstandingCarryovers.filter(c => c.term === 1).length > 0 && (
+                       <div className="bg-white/60 p-4 rounded-xl border border-red-200">
+                         <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">First Semester</p>
+                         <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 1).map(c => c.code).join(', ')}</p>
+                       </div>
+                     )}
+                     {studentData.outstandingCarryovers.filter(c => c.term === 2).length > 0 && (
+                       <div className="bg-white/60 p-4 rounded-xl border border-red-200">
+                         <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Second Semester</p>
+                         <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 2).map(c => c.code).join(', ')}</p>
+                       </div>
+                     )}
+                   </div>
+                </div>
+             </div>
+          </div>
           )}
 
           {/* Header */}
@@ -360,6 +434,17 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
                     Passed: <span className="text-emerald-700">{studentData.totalUnitsPassed ?? 0}</span> Units
                   </p>
                 </div>
+                {studentData.targetGraduationUnits ? (
+                  <div className="mt-4 max-w-sm">
+                    <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      <span>Progress to Graduation</span>
+                      <span className="text-indigo-600">{studentData.totalUnitsPassed ?? 0} / {studentData.targetGraduationUnits} Units ({Math.round(((studentData.totalUnitsPassed ?? 0) / studentData.targetGraduationUnits) * 100)}%)</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className={`h-2 rounded-full ${studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0 ? 'bg-gradient-to-r from-orange-400 to-red-500' : 'bg-gradient-to-r from-indigo-500 to-blue-500'}`} style={{ width: `${Math.min(100, ((studentData.totalUnitsPassed ?? 0) / studentData.targetGraduationUnits) * 100)}%` }}></div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
               <div className="flex gap-2">
                 <Link href="/dashboard/transcript" className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all">
@@ -368,6 +453,8 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
               </div>
             </div>
           </div>
+
+          {targetCalculatorUI}
 
           {/* Glassmorphic CGPA Card */}
           <motion.div 
@@ -591,20 +678,20 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                   <Users className="w-6 h-6 text-indigo-600" />
-                  Invite Your Friends
+                  Remind a Friend
                 </h3>
                 <p className="text-gray-600 mb-4 text-sm max-w-md">
-                  Help your friends track their CGPA too! They'll be added to your department's leaderboard so you can compete together.
+                  Students often lose track of courses they need to pass, which can lead to an unexpected extra year. Share this link to help your friends stay on track and graduate on time!
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="bg-white border border-indigo-200 text-indigo-700 font-mono font-bold px-4 py-2 rounded-xl text-sm select-all">
-                    {studentData.referralCode ? `https://firstclass.ng/onboarding?ref=${studentData.referralCode}` : 'Not available'}
+                    {studentData.referralCode ? `https://mygpa.com.ng/onboarding?ref=${studentData.referralCode}` : 'Not available'}
                   </div>
                 </div>
               </div>
               
               <div className="bg-white rounded-2xl p-4 md:px-8 text-center border border-indigo-100 shadow-sm min-w-[150px]">
-                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Referrals</p>
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Friends Reminded</p>
                 <p className="text-4xl font-black text-indigo-600">{studentData.referralsCount || 0}</p>
               </div>
             </div>
@@ -660,6 +747,44 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
         </div>
       </nav>
 
+      {/* Carryover Reminder Modal */}
+      {showCarryoverModal && studentData.outstandingCarryovers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative"
+          >
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-black text-center mb-2">Registration Reminder</h3>
+            <p className="text-gray-600 text-center mb-6">
+              Welcome back! Don't forget that you have <span className="font-bold text-red-600">{studentData.outstandingCarryovers.length} carryover course(s)</span> you MUST register for this semester to stay on track.
+            </p>
+            <div className="flex flex-col gap-3 mb-6">
+              {studentData.outstandingCarryovers.filter(c => c.term === 1).length > 0 && (
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                  <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">First Semester</p>
+                  <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 1).map(c => c.code).join(', ')}</p>
+                </div>
+              )}
+              {studentData.outstandingCarryovers.filter(c => c.term === 2).length > 0 && (
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                  <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Second Semester</p>
+                  <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 2).map(c => c.code).join(', ')}</p>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowCarryoverModal(false)}
+              className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
+            >
+              I got it, thanks!
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
