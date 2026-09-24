@@ -92,7 +92,7 @@ export default async function DashboardPage() {
       }
 
       trendData.push({
-        semester: `${levelLabel} T${sem.term}`,
+        semester: `${levelLabel} ${sem.term === 1 ? '1st' : sem.term === 2 ? '2nd' : sem.term + 'th'} Semester`,
         gpa: Number(semGPA.toFixed(2))
       });
     });
