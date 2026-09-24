@@ -27,7 +27,7 @@ function scoreToGrade(score) {
 
 const CONTROL_WINDOW_MS = 2 * 60 * 1000;
 const LOCK_DURATION_MS = 24 * 60 * 60 * 1000;
-const AMOUNT_NGN = 1000;
+const AMOUNT_NGN = 6000;
 const STATE_FILE = path.join(__dirname, 'state.json');
 const VALID_LEVELS = ['100', '200', '300', '400', '500', '600', '700'];
 const MONNIFY_API_KEY       = process.env.MONNIFY_API_KEY       || '';
@@ -215,7 +215,7 @@ function upgradePrompt() {
     return (
         `🔒 *Full Access Required*\n\n` +
         `Your free check has been used.\n\n` +
-        `Upgrade for *₦1,000/semester* to unlock:\n` +
+        `Upgrade for *₦6,000 (covers 1st & 2nd semester)* to unlock:\n` +
         `• Unlimited CGPA calculations\n` +
         `• Cumulative CGPA tracking\n` +
         `• Semester history\n` +
@@ -271,7 +271,7 @@ async function initializeMonnifyPayment(email, phone, name) {
             customerName:       name || 'Student',
             customerEmail:      email,
             paymentReference:   reference,
-            paymentDescription: 'UI CGPA Bot — Semester Access',
+            paymentDescription: 'UI CGPA Bot — Session Access',
             currencyCode:       'NGN',
             contractCode:       MONNIFY_CONTRACT_CODE,
             paymentMethods:     ['ACCOUNT_TRANSFER', 'CARD']
@@ -454,7 +454,7 @@ async function handleBotMessage(from, msg) {
     if (upper === 'HELP') {
         const paidCmds = paid
             ? "• CUMULATIVE — overall CGPA across all semesters\n• PROFILE — view your details & subscription\n• RESET — clear semester records\n"
-            : "• PAY / UPGRADE — unlock full access (₦1,000/semester)\n• PROFILE — view your registration details\n";
+            : "• PAY / UPGRADE — unlock full access (₦6,000 for 1st & 2nd semester)\n• PROFILE — view your registration details\n";
         return (
             "📚 *CGPA Bot Help*\n\n" +
             "*Format:* COURSE TITLE SCORE UNIT\n" +
@@ -487,7 +487,7 @@ async function handleBotMessage(from, msg) {
         return (
             `💳 *Subscription Status*\n\n` +
             `🔒 Free tier${state.freeCheckUsed ? ' (free check used)' : ' (1 free check remaining)'}\n\n` +
-            `Send *PAY* to unlock full access for ₦1,000/semester.`
+            `Send *PAY* to unlock full access for ₦6,000 (covers 1st & 2nd semester).`
         );
     }
 
@@ -511,7 +511,7 @@ async function handleBotMessage(from, msg) {
             const email = state.profile.email || `${state.profile.matric || 'student'}@ui.edu.ng`;
             const { url } = await initializeMonnifyPayment(email, from, state.profile.name);
             return (
-                `💳 *Pay ₦1,000 for Semester Access*\n\n` +
+                `💳 *Pay ₦6,000 for Session Access (1st & 2nd Semester)*\n\n` +
                 `You can pay by *bank transfer or card* — no POS needed!\n\n` +
                 `👉 Click to proceed:\n${url}\n\n` +
                 `✅ Your access unlocks automatically once payment is confirmed.\n\n` +
@@ -657,7 +657,7 @@ async function handleBotMessage(from, msg) {
             `*Breakdown:*\n${result.breakdown}${suffix}\n\n` +
             `─────────────────────\n` +
             `🆓 That was your *free check*.\n\n` +
-            `To track multiple semesters & cumulative CGPA, upgrade for *₦1,000/semester*.\n\n` +
+            `To track multiple semesters & cumulative CGPA, upgrade for *₦6,000 (covers 1st & 2nd semester)*.\n\n` +
             `👉 Send *PAY* to unlock full access.`
         );
     }
@@ -758,7 +758,7 @@ app.post('/monnify-webhook', async (req, res) => {
         if (phone) {
             const state = getUserState(phone);
             state.isPaid    = true;
-            state.paidUntil = Date.now() + 120 * 24 * 60 * 60 * 1000; // 120 days (~1 semester)
+            state.paidUntil = Date.now() + 365 * 24 * 60 * 60 * 1000; // 365 days (~2 semesters)
             saveState();
             console.log(`✅ Monnify payment confirmed for ${phone}`);
             // Notify via Sendchamp (primary) or Meta (fallback)
@@ -919,7 +919,7 @@ app.get('/terms', (req, res) => {
 <h2>2. Acceptable Use</h2>
 <p>You agree not to misuse the Bot, share accounts, or manipulate calculations. Abuse results in account suspension.</p>
 <h2>3. Payments</h2>
-<p>Subscription payments of ₦1,000/semester are non-refundable once access is granted. Access is valid for ~120 days.</p>
+<p>Subscription payments of ₦6,000 for 1st & 2nd semester are non-refundable once access is granted. Access is valid for ~365 days.</p>
 <h2>4. Accuracy</h2>
 <p>CGPA results depend on data you provide. We are not liable for errors from incorrect data entry.</p>
 <h2>5. Changes</h2>
