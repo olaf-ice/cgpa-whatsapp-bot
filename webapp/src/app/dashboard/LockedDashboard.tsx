@@ -68,7 +68,7 @@ export default function LockedDashboard({ email, name, amount }: LockedDashboard
         <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Unlock Your Insights</h2>
         <p className="text-gray-600 mb-8 font-medium leading-relaxed">
           {name.split(' ')[0]}, your results, peer rankings, and Academic insights are ready. 
-          Unlock full access to your personalized Dashboard for the semester.
+          Unlock full access to your personalized Dashboard for {amount === 6000 ? 'the 1st and 2nd semester' : 'the semester'}.
         </p>
 
         <div className="space-y-4 mb-8 text-left max-w-sm mx-auto">

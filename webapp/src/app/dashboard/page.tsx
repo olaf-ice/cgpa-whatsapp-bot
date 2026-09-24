@@ -218,6 +218,11 @@ export default async function DashboardPage() {
         paymentAmount = 2500;
       }
 
+      // UI Students override
+      if ((student.institution?.name || '').toLowerCase().includes('ibadan')) {
+        paymentAmount = 6000;
+      }
+
       return <LockedDashboardWrapper email={user.email || ''} name={student.name} amount={paymentAmount} />
     }
   }
