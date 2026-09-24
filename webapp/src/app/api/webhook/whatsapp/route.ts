@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'cgpa_bot_verify_123'
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'mygpa_verify_123'
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
             if (error || !student) {
               await sendWhatsAppMessage(
                 senderPhone, 
-                "Hi! It looks like this number isn't connected to a CGPA Bot account yet. Please log into your web dashboard and link your WhatsApp number in the Settings."
+                "Hi! It looks like this number isn't connected to a MyGPA account yet. Please log into your web dashboard and link your WhatsApp number in the Settings."
               )
               continue;
             }
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
             else {
               await sendWhatsAppMessage(
                 senderPhone,
-                "🤖 *CGPA Bot Menu*\n\nReply with one of the following commands:\n\n*CGPA* - View your current cumulative GPA\n*TARGET* - (Coming Soon)"
+                "🤖 *MyGPA Menu*\n\nReply with one of the following commands:\n\n*CGPA* - View your current cumulative GPA\n*TARGET* - (Coming Soon)"
               )
             }
           }

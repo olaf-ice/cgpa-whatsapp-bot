@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
  
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'CGPA Bot',
-    short_name: 'CGPA Bot',
+    name: 'MyGPA',
+    short_name: 'MyGPA',
     description: 'The Ultimate Student Success Engine & CGPA Calculator',
     start_url: '/dashboard',
     display: 'standalone',

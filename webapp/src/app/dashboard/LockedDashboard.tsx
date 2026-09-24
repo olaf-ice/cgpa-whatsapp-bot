@@ -26,7 +26,7 @@ export default function LockedDashboard({ email, name, amount }: LockedDashboard
         {
           display_name: "App Name",
           variable_name: "app_name",
-          value: "cgpa_bot"
+          value: "mygpa"
         }
       ]
     }

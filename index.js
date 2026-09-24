@@ -271,7 +271,7 @@ async function initializeMonnifyPayment(email, phone, name) {
             customerName:       name || 'Student',
             customerEmail:      email,
             paymentReference:   reference,
-            paymentDescription: 'UI CGPA Bot — Session Access',
+            paymentDescription: 'MyGPA — Session Access',
             currencyCode:       'NGN',
             contractCode:       MONNIFY_CONTRACT_CODE,
             paymentMethods:     ['ACCOUNT_TRANSFER', 'CARD']
@@ -456,7 +456,7 @@ async function handleBotMessage(from, msg) {
             ? "• CUMULATIVE — overall CGPA across all semesters\n• PROFILE — view your details & subscription\n• RESET — clear semester records\n"
             : "• PAY / UPGRADE — unlock full access (₦6,000 for 1st & 2nd semester)\n• PROFILE — view your registration details\n";
         return (
-            "📚 *CGPA Bot Help*\n\n" +
+            "📚 *MyGPA Help*\n\n" +
             "*Format:* COURSE TITLE SCORE UNIT\n" +
             "*Example:* Introduction to Programming 72 3\n" +
             "_(Separate multiple courses with a comma)_\n\n" +
@@ -876,7 +876,7 @@ app.post('/meta-webhook', async (req, res) => {
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 
-app.get('/', (req, res) => res.send('UI CGPA Bot is running ✅'));
+app.get('/', (req, res) => res.send('MyGPA is running ✅'));
 
 // ─── Privacy Policy & Terms (required for Meta compliance) ───────────────────
 
@@ -884,13 +884,13 @@ app.get('/privacy', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Privacy Policy — UI CGPA Bot</title>
+<head><meta charset="UTF-8"><title>Privacy Policy — MyGPA</title>
 <style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}</style>
 </head>
 <body>
 <h1>Privacy Policy</h1>
 <p><strong>Last updated:</strong> ${new Date().toDateString()}</p>
-<p>This Privacy Policy explains how the <strong>UI CGPA Bot</strong> collects, uses, and protects your information when you interact with it via WhatsApp.</p>
+<p>This Privacy Policy explains how <strong>MyGPA</strong> collects, uses, and protects your information when you interact with it via WhatsApp.</p>
 <h2>1. Information We Collect</h2>
 <ul><li>Full name and matric number</li><li>Faculty, department, and level</li><li>Email address</li><li>WhatsApp phone number</li><li>CGPA and semester data you submit</li></ul>
 <h2>2. How We Use Your Information</h2>
@@ -908,7 +908,7 @@ app.get('/terms', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Terms of Service — UI CGPA Bot</title>
+<head><meta charset="UTF-8"><title>Terms of Service — MyGPA</title>
 <style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}</style>
 </head>
 <body>
@@ -934,12 +934,12 @@ app.get('/data-deletion', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Data Deletion — UI CGPA Bot</title>
+<head><meta charset="UTF-8"><title>Data Deletion — MyGPA</title>
 <style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#1a1a2e}h2{color:#444;margin-top:30px}.box{background:#f4f4f4;padding:16px;border-radius:8px;margin:20px 0}</style>
 </head>
 <body>
 <h1>Data Deletion Request</h1>
-<p>If you would like your data deleted from the <strong>UI CGPA Bot</strong>, you have two options:</p>
+<p>If you would like your data deleted from <strong>MyGPA</strong>, you have two options:</p>
 
 <h2>Option 1 — Delete via WhatsApp (Instant)</h2>
 <div class="box">

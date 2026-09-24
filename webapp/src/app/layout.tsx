@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://mygpa.com.ng'),
-  title: "CGPA Bot | Student Success Engine",
+  title: "MyGPA | Student Success Engine",
   description: "The ultimate student success engine and CGPA calculator.",
   openGraph: {
-    title: "CGPA Bot | Student Success Engine",
+    title: "MyGPA | Student Success Engine",
     description: "The ultimate student success engine and CGPA calculator.",
     url: 'https://mygpa.com.ng',
     siteName: 'MyGPA',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CGPA Bot',
+    title: 'MyGPA',
   }
 };
 

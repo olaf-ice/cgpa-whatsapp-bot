@@ -20,7 +20,7 @@ paystack_logic = """
         {
           display_name: "App Name",
           variable_name: "app_name",
-          value: "cgpa_bot"
+          value: "mygpa"
         }
       ]
     }
@@ -30,7 +30,7 @@ paystack_logic = """
 
   const onSuccess = (reference: any) => {
     console.log('Payment successful. Reference:', reference);
-    alert('Payment of ₦2000 received for CGPA Bot!');
+    alert('Payment of ₦2000 received for MyGPA!');
   };
 
   const onClose = () => {

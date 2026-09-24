@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
  
 export const runtime = 'edge';
  
-export const alt = 'CGPA Bot | Student Success Engine';
+export const alt = 'MyGPA | Student Success Engine';
 export const size = {
   width: 1200,
   height: 630,
