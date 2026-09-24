@@ -31,7 +31,7 @@ export async function saveProfile(data: { name: string, matric_number: string, i
   }
 
   if (data.target_graduation_units) {
-    await supabase.from('students').update({ target_graduation_units: data.target_graduation_units }).eq('user_id', user.id);
+    await (supabase as any).from('students').update({ target_graduation_units: data.target_graduation_units }).eq('user_id', user.id);
   }
 
   redirect('/dashboard')

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, Mail, ShieldAlert, Users } from 'lucide-react'
