@@ -11,9 +11,9 @@ CREATE TABLE institutions (
 
 -- Seed Initial Institutions
 INSERT INTO institutions (name, type, grading_scale, grade_boundaries) VALUES
--- Federal Universities (5.0 Scale)
-('University of Ibadan (UI)', 'Federal University', 7.0, 
- '{"A": {"min_score": 70, "points": 7}, "A-": {"min_score": 65, "points": 6}, "B+": {"min_score": 60, "points": 5}, "B": {"min_score": 55, "points": 4}, "B-": {"min_score": 50, "points": 3}, "C+": {"min_score": 45, "points": 2}, "C": {"min_score": 40, "points": 1}, "F": {"min_score": 0, "points": 0}}'::jsonb),
+-- Federal Universities (4.0 and 5.0 Scales)
+('University of Ibadan (UI)', 'Federal University', 4.0, '{"A": {"min_score": 70, "points": 4}, "B": {"min_score": 60, "points": 3}, "C": {"min_score": 50, "points": 2}, "D": {"min_score": 45, "points": 1}, "E": {"min_score": 40, "points": 0}, "F": {"min_score": 0, "points": 0}}'::jsonb),
+('University of Ibadan DLC (UI DLC)', 'Federal University', 4.0, '{"A": {"min_score": 70, "points": 4}, "B": {"min_score": 60, "points": 3}, "C": {"min_score": 50, "points": 2}, "D": {"min_score": 45, "points": 1}, "E": {"min_score": 40, "points": 0}, "F": {"min_score": 0, "points": 0}}'::jsonb),
 ('University of Lagos (UNILAG)', 'Federal University', 5.0, '{"A": {"min_score": 70, "points": 5}, "B": {"min_score": 60, "points": 4}, "C": {"min_score": 50, "points": 3}, "D": {"min_score": 45, "points": 2}, "E": {"min_score": 40, "points": 1}, "F": {"min_score": 0, "points": 0}}'::jsonb),
 ('Obafemi Awolowo University (OAU)', 'Federal University', 5.0, '{"A": {"min_score": 70, "points": 5}, "B": {"min_score": 60, "points": 4}, "C": {"min_score": 50, "points": 3}, "D": {"min_score": 45, "points": 2}, "E": {"min_score": 40, "points": 1}, "F": {"min_score": 0, "points": 0}}'::jsonb),
 ('Ahmadu Bello University (ABU)', 'Federal University', 5.0, '{"A": {"min_score": 70, "points": 5}, "B": {"min_score": 60, "points": 4}, "C": {"min_score": 50, "points": 3}, "D": {"min_score": 45, "points": 2}, "E": {"min_score": 40, "points": 1}, "F": {"min_score": 0, "points": 0}}'::jsonb),
