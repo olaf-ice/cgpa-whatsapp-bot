@@ -919,7 +919,7 @@ app.get('/terms', (req, res) => {
 <h2>2. Acceptable Use</h2>
 <p>You agree not to misuse the Bot, share accounts, or manipulate calculations. Abuse results in account suspension.</p>
 <h2>3. Payments</h2>
-<p>Subscription payments of ₦6,000 for 1st & 2nd semester are non-refundable once access is granted. Access is valid for ~365 days.</p>
+<p>Subscription payments of ₦6,000 for 1st & 2nd semester are non-refundable once access is granted. Access is valid for the 1st & 2nd semester.</p>
 <h2>4. Accuracy</h2>
 <p>CGPA results depend on data you provide. We are not liable for errors from incorrect data entry.</p>
 <h2>5. Changes</h2>
