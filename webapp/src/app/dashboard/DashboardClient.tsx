@@ -2,6 +2,8 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, Mail, ShieldAlert, Users } from 'lucide-react'
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
@@ -109,6 +111,13 @@ interface DashboardClientProps {
 export default function DashboardClient({ studentData }: DashboardClientProps) {
 
   const [, startTransition] = useTransition()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
   
   
   const [emailEnabled, setEmailEnabled] = useState(studentData.emailRemindersEnabled ?? true)
@@ -332,7 +341,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
         </nav>
 
         <div className="mt-auto pt-6 border-t border-gray-200/60">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-xl font-medium transition-all">
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-xl font-medium transition-all"
+          >
             <LogOut className="w-5 h-5" />
             Sign Out
           </button>
@@ -736,8 +748,12 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           </Link>
           <Link href="/onboarding" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
             <Settings className="w-6 h-6" />
-            <span className="text-[10px] font-semibold">Edit Profile</span>
+            <span className="text-[10px] font-semibold">Profile</span>
           </Link>
+          <button onClick={handleSignOut} className="flex flex-col items-center gap-1 text-gray-400 hover:text-red-500 transition-colors">
+            <LogOut className="w-6 h-6" />
+            <span className="text-[10px] font-semibold">Sign Out</span>
+          </button>
           {studentData.isAdmin && (
             <Link href="/admin" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition-colors">
               <ShieldAlert className="w-6 h-6" />
