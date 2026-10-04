@@ -11,10 +11,14 @@ export default async function EntryPage({ searchParams }: { searchParams?: Promi
     redirect('/login')
   }
 
-  // Fetch student and their institution's grade boundaries
+  // Fetch student, institution, and all their logged semesters/grades
   const { data, error } = await (supabase as any)
     .from('students')
-    .select('*, institution:institutions(name, grading_scale, grade_boundaries)')
+    .select(`
+      *, 
+      institution:institutions(name, grading_scale, grade_boundaries),
+      semesters(id, level, term, grades(course_code, credit_units, grade))
+    `)
     .eq('user_id', user.id)
     .single()
 
@@ -22,37 +26,6 @@ export default async function EntryPage({ searchParams }: { searchParams?: Promi
 
   if (error || !student) {
     redirect('/onboarding')
-  }
-
-  let initialCourses: any = null;
-  let initialLevel: number | null = null;
-  let initialTerm: number | null = null;
-
-  if (searchParams) {
-    const sParams = await searchParams;
-    if (sParams?.editLevel && sParams?.editTerm) {
-      initialLevel = parseInt(sParams.editLevel as string);
-      initialTerm = parseInt(sParams.editTerm as string);
-
-      const { data: semData } = await (supabase as any)
-        .from('semesters')
-        .select('id, grades(course_code, credit_units, grade)')
-        .eq('student_id', student.id)
-        .eq('level', initialLevel)
-        .eq('term', initialTerm)
-        .single();
-
-      if (semData && semData.grades) {
-        initialCourses = semData.grades.map((g: any) => {
-          const bound = student.institution.grade_boundaries[g.grade];
-          return {
-            code: g.course_code,
-            units: g.credit_units,
-            score: bound ? bound.min_score : 0
-          }
-        });
-      }
-    }
   }
 
   let gradeBoundaries = student.institution?.grade_boundaries;
@@ -67,14 +40,60 @@ export default async function EntryPage({ searchParams }: { searchParams?: Promi
     };
   }
 
+  // Map all existing saved semesters by `${level}-${term}` to ensure each semester's courses stay completely separate
+  const savedSemesters: Record<string, Array<{ code: string, units: number, score: number | '' }>> = {};
+  if (student.semesters) {
+    student.semesters.forEach((sem: any) => {
+      const key = `${sem.level}-${sem.term}`;
+      if (sem.grades && sem.grades.length > 0) {
+        savedSemesters[key] = sem.grades.map((g: any) => {
+          const bound = gradeBoundaries ? gradeBoundaries[g.grade] : null;
+          return {
+            code: g.course_code,
+            units: g.credit_units,
+            score: bound ? bound.min_score : ''
+          };
+        });
+      }
+    });
+  }
+
+  let initialLevel: number = student.current_level || 100;
+  let initialTerm: number = 1;
+  let initialCourses: any = null;
+
+  const sParams = searchParams ? await searchParams : null;
+  if (sParams?.editLevel && sParams?.editTerm) {
+    initialLevel = parseInt(sParams.editLevel as string);
+    initialTerm = parseInt(sParams.editTerm as string);
+    const key = `${initialLevel}-${initialTerm}`;
+    if (savedSemesters[key]) {
+      initialCourses = savedSemesters[key];
+    }
+  } else {
+    // If 1st semester for this level is already logged, default to 2nd semester (which starts fresh)
+    const firstSemKey = `${initialLevel}-1`;
+    const secondSemKey = `${initialLevel}-2`;
+    if (savedSemesters[firstSemKey] && !savedSemesters[secondSemKey]) {
+      initialTerm = 2; // Fresh 2nd semester
+    } else if (savedSemesters[secondSemKey]) {
+      initialTerm = 2;
+      initialCourses = savedSemesters[secondSemKey];
+    } else if (savedSemesters[firstSemKey]) {
+      initialCourses = savedSemesters[firstSemKey];
+    }
+  }
+
   return (
     <EntryClient 
       studentName={student.name}
-      institutionName={student.institution.name}
+      institutionName={student.institution?.name || ''}
       gradeBoundaries={gradeBoundaries}
-      initialLevel={initialLevel || undefined}
-      initialTerm={initialTerm || undefined}
+      initialLevel={initialLevel}
+      initialTerm={initialTerm}
       initialCourses={initialCourses || undefined}
+      savedSemesters={savedSemesters}
     />
   )
 }
+

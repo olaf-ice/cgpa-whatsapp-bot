@@ -4,6 +4,7 @@ import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveProfile } from './actions'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Lock, ShieldCheck, Info } from 'lucide-react'
 
 type Institution = {
   id: string;
@@ -12,11 +13,42 @@ type Institution = {
   grading_scale: number;
 }
 
-export default function OnboardingClient({ institutions, referredBy, existingProfile }: { institutions: Institution[], referredBy: string | null, existingProfile?: any }) {
+export default function OnboardingClient({ 
+  institutions, 
+  referredBy, 
+  existingProfile,
+  userEmail = ''
+}: { 
+  institutions: Institution[], 
+  referredBy: string | null, 
+  existingProfile?: any,
+  userEmail?: string
+}) {
   const _router = useRouter()
   const [isPending, startTransition] = useTransition()
   
   const isEditing = !!existingProfile;
+
+  // Determine if the user is exempt (Oladipupo Timileyin or admin)
+  const isExempt = useMemo(() => {
+    const cleanEmail = (userEmail || '').toLowerCase().trim();
+    if (cleanEmail === 'timileyinsimeon@gmail.com' || cleanEmail === 'simeoncranier@gmail.com') {
+      return true;
+    }
+    if (existingProfile?.is_admin === true) {
+      return true;
+    }
+    const cleanName = (existingProfile?.name || '').toLowerCase().replace(/[^a-z]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (cleanName.includes('oladipupo') && cleanName.includes('timileyin')) {
+      return true;
+    }
+    return false;
+  }, [userEmail, existingProfile]);
+
+  // Non-exempt users cannot change full name, matric number, or course of study after registration
+  const isNameLocked = !isExempt && isEditing && !!existingProfile?.name && existingProfile.name !== 'Student';
+  const isMatricLocked = !isExempt && isEditing && !!existingProfile?.matric_number && existingProfile.matric_number.trim() !== '';
+  const isCourseLocked = !isExempt && isEditing && !!existingProfile?.course_of_study && existingProfile.course_of_study.trim() !== '';
 
   const [step, setStep] = useState(1)
   const [institution, setInstitution] = useState<string>(existingProfile?.institution_id || '')
@@ -48,12 +80,29 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
   }
 
   const handleSaveProfile = () => {
+    const trimmedName = name.trim();
+    const trimmedMatric = matricNumber.trim();
+    const trimmedCourse = courseOfStudy.trim();
+
+    if (!trimmedName || trimmedName.toLowerCase() === 'student') {
+      alert('Please enter your full name.');
+      return;
+    }
+    if (!trimmedMatric) {
+      alert('Please enter your matric number.');
+      return;
+    }
+    if (!trimmedCourse) {
+      alert('Please enter your course of study.');
+      return;
+    }
+
     startTransition(async () => {
       const response = await saveProfile({
-        name: name || 'Student',
-        matric_number: matricNumber,
+        name: trimmedName,
+        matric_number: trimmedMatric,
         institution_id: institution,
-        course: courseOfStudy,
+        course: trimmedCourse,
         level: parseInt(level),
         target_graduation_units: parseInt(targetGraduationUnits) || null,
         referredBy
@@ -150,8 +199,8 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
             className="space-y-6"
           >
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">What level are you starting from?</h2>
-              <p className="text-gray-500">Direct Entry students usually start at 200L.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{isEditing ? 'Academic & Profile Details' : 'What level are you starting from?'}</h2>
+              <p className="text-gray-500">{isEditing ? 'Review or update your academic progress.' : 'Direct Entry students usually start at 200L.'}</p>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -183,26 +232,115 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
               })}
             </div>
 
-            {isEditing && (
-              <div className="space-y-4 pt-4 border-t border-gray-100">
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Personal Details</h3>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Matric Number</label>
-                  <input type="text" value={matricNumber} onChange={e => setMatricNumber(e.target.value)} placeholder="e.g. 210045" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Course of Study</label>
-                  <input type="text" value={courseOfStudy} onChange={e => setCourseOfStudy(e.target.value)} placeholder="e.g. Computer Science" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                {isExempt && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Admin / Unrestricted
+                  </span>
+                )}
               </div>
-            )}
+
+              {isEditing && !isExempt && (isNameLocked || isMatricLocked || isCourseLocked) && (
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs text-blue-900 leading-relaxed">
+                  <Lock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Record Protection:</span> Full Name, Matric Number, and Course of Study cannot be changed after registration. Contact an administrator to request updates.
+                  </div>
+                </div>
+              )}
+
+              {!isEditing && (
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-100 text-xs text-amber-900 leading-relaxed">
+                  <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Important Notice:</span> Please double-check your Full Name, Matric Number, and Course of Study. Once registered, these cannot be altered.
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  {isNameLocked && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
+                      <Lock className="w-3 h-3" /> Locked
+                    </span>
+                  )}
+                </div>
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={e => setName(e.target.value)} 
+                  placeholder="e.g. John Doe" 
+                  disabled={isNameLocked}
+                  readOnly={isNameLocked}
+                  className={`w-full border rounded-xl px-4 py-3 text-gray-800 transition-colors ${
+                    isNameLocked 
+                      ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' 
+                      : 'bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  }`} 
+                />
+                {isNameLocked && (
+                  <p className="text-[11px] text-gray-400 mt-1">Permanent record. Cannot be changed after registration.</p>
+                )}
+              </div>
+              
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Matric Number</label>
+                  {isMatricLocked && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
+                      <Lock className="w-3 h-3" /> Locked
+                    </span>
+                  )}
+                </div>
+                <input 
+                  type="text" 
+                  value={matricNumber} 
+                  onChange={e => setMatricNumber(e.target.value)} 
+                  placeholder="e.g. 210045" 
+                  disabled={isMatricLocked}
+                  readOnly={isMatricLocked}
+                  className={`w-full border rounded-xl px-4 py-3 text-gray-800 transition-colors ${
+                    isMatricLocked 
+                      ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' 
+                      : 'bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  }`} 
+                />
+                {isMatricLocked && (
+                  <p className="text-[11px] text-gray-400 mt-1">Permanent record. Cannot be changed after registration.</p>
+                )}
+              </div>
+              
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Course of Study</label>
+                  {isCourseLocked && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
+                      <Lock className="w-3 h-3" /> Locked
+                    </span>
+                  )}
+                </div>
+                <input 
+                  type="text" 
+                  value={courseOfStudy} 
+                  onChange={e => setCourseOfStudy(e.target.value)} 
+                  placeholder="e.g. Computer Science" 
+                  disabled={isCourseLocked}
+                  readOnly={isCourseLocked}
+                  className={`w-full border rounded-xl px-4 py-3 text-gray-800 transition-colors ${
+                    isCourseLocked 
+                      ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' 
+                      : 'bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  }`} 
+                />
+                {isCourseLocked && (
+                  <p className="text-[11px] text-gray-400 mt-1">Permanent record. Cannot be changed after registration.</p>
+                )}
+              </div>
+            </div>
 
             <div className="space-y-4 pt-4 border-t border-gray-100">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Graduation Target</h3>
@@ -235,7 +373,7 @@ export default function OnboardingClient({ institutions, referredBy, existingPro
                 disabled={isPending}
                 className={`flex-1 py-3 bg-gradient-to-r ${getThemeClasses()} text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50`}
               >
-                {isPending ? 'Calculating...' : 'See My CGPA'}
+                {isPending ? 'Saving...' : (isEditing ? 'Save Changes' : 'See My CGPA')}
               </button>
             </div>
           </motion.div>

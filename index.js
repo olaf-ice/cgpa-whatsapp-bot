@@ -117,6 +117,15 @@ function isPaidActive(state) {
     return state.isPaid && Date.now() < state.paidUntil;
 }
 
+function isExemptUser(profile) {
+    if (!profile) return false;
+    const email = (profile.email || '').toLowerCase().trim();
+    if (email === 'timileyinsimeon@gmail.com' || email === 'simeoncranier@gmail.com') return true;
+    const name = (profile.name || '').toLowerCase().replace(/[^a-z]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (name.includes('oladipupo') && name.includes('timileyin')) return true;
+    return false;
+}
+
 function parseCourses(message) {
     return message.split(',')
         .map(p => p.trim()).filter(Boolean)
@@ -331,7 +340,31 @@ async function handleBotMessage(from, msg) {
 
     // ── REGISTRATION FLOW ───────────────────────────────────────────────
 
-    if (state.phase === PHASE.UNREGISTERED || upper === 'REGISTER') {
+    if (upper === 'REGISTER') {
+        const isRegistered = state.phase === PHASE.REGISTERED || !!(state.profile && state.profile.name);
+        if (isRegistered && !isExemptUser(state.profile)) {
+            return (
+                "🔒 *Profile Editing Restricted*\n\n" +
+                "You cannot change your *Full Name*, *Matric Number*, or *Course of Study* after registration.\n\n" +
+                `📛 Name: *${state.profile.name || 'N/A'}*\n` +
+                `🎓 Matric No: *${state.profile.matric || 'N/A'}*\n` +
+                `🏛️ Faculty: *${state.profile.faculty || 'N/A'}*\n` +
+                `📚 Department: *${state.profile.department || 'N/A'}*\n` +
+                `📊 Level: *${state.profile.level || '100'}L*\n\n` +
+                "If you need to update your academic level, send: *LEVEL <new level>* (e.g. *LEVEL 200*).\n\n" +
+                "For corrections to your registered personal details, please contact an administrator."
+            );
+        }
+        state.phase = PHASE.AWAITING_NAME;
+        saveState();
+        return (
+            "🎓 *Welcome to the UI CGPA Calculator!*\n\n" +
+            "Let's set up your profile — takes less than a minute.\n\n" +
+            "📛 Enter your *Full Name*:"
+        );
+    }
+
+    if (state.phase === PHASE.UNREGISTERED) {
         state.phase = PHASE.AWAITING_NAME;
         saveState();
         return (
@@ -374,7 +407,24 @@ async function handleBotMessage(from, msg) {
             return (
                 "❌ Matric number should include a slash, e.g. *23/0001*\n\nTry again:"
             );
-        state.profile.matric = msg.toUpperCase();
+
+        const cleanMatric = msg.toUpperCase().trim();
+        // Ensure 1 matric number per student
+        let matricInUse = false;
+        for (const [phone, uState] of userStates.entries()) {
+            if (phone !== from && uState.profile?.matric && uState.profile.matric.toUpperCase().trim() === cleanMatric) {
+                matricInUse = true;
+                break;
+            }
+        }
+        if (matricInUse) {
+            return (
+                `❌ Matric number *${cleanMatric}* is already registered to another user.\n\n` +
+                "Each student must have a unique matric number. Try again:"
+            );
+        }
+
+        state.profile.matric = cleanMatric;
         state.phase = PHASE.AWAITING_FACULTY;
         saveState();
         return (
@@ -433,7 +483,24 @@ async function handleBotMessage(from, msg) {
                 "❌ That doesn't look like a valid email address.\n" +
                 "e.g. *johndoe@gmail.com*\n\nEnter your *Email Address*:"
             );
-        state.profile.email = msg.toLowerCase().trim();
+        const cleanEmail = msg.toLowerCase().trim();
+
+        // Ensure 1 email per person
+        let emailInUse = false;
+        for (const [phone, uState] of userStates.entries()) {
+            if (phone !== from && uState.profile?.email && uState.profile.email.toLowerCase().trim() === cleanEmail) {
+                emailInUse = true;
+                break;
+            }
+        }
+        if (emailInUse) {
+            return (
+                `❌ This email address (*${cleanEmail}*) is already registered to another account.\n\n` +
+                "Only *1 account per email* is permitted. Please enter a different *Email Address*:"
+            );
+        }
+
+        state.profile.email = cleanEmail;
         state.phase = PHASE.REGISTERED;
         saveState();
         return (
@@ -450,8 +517,28 @@ async function handleBotMessage(from, msg) {
 
     // ── From here: REGISTERED user ─────────────────────────────────────
 
+    // ── LEVEL UPDATE (for registered users) ───────────────────────────
+    if (upper.startsWith('LEVEL')) {
+        const parts = upper.split(/\s+/);
+        if (parts.length > 1) {
+            const lvl = parts[1].replace(/[lL]/g, '').trim();
+            if (VALID_LEVELS.includes(lvl)) {
+                state.profile.level = lvl;
+                saveState();
+                return `✅ Your level has been updated to *${lvl}L*.`;
+            }
+            return "❌ Invalid level. Use: *LEVEL 100*, *LEVEL 200*, *LEVEL 300*, *LEVEL 400*, *LEVEL 500*, *LEVEL 600*, or *LEVEL 700*.";
+        }
+    }
+
     // ── HELP ────────────────────────────────────────────────────────────
     if (upper === 'HELP') {
+        const isRegistered = state.phase === PHASE.REGISTERED || !!(state.profile && state.profile.name);
+        const exempt = isExemptUser(state.profile);
+        const regCmd = (!isRegistered || exempt)
+            ? "• REGISTER — update registration info\n"
+            : "• LEVEL <lvl> — update your academic level (e.g. LEVEL 200)\n";
+
         const paidCmds = paid
             ? "• CUMULATIVE — overall CGPA across all semesters\n• PROFILE — view your details & subscription\n• RESET — clear semester records\n"
             : "• PAY / UPGRADE — unlock full access (₦6,000 for 1st & 2nd semester)\n• PROFILE — view your registration details\n";
@@ -465,7 +552,7 @@ async function handleBotMessage(from, msg) {
             "*Commands:*\n" +
             paidCmds +
             "• STATUS — check subscription status\n" +
-            "• REGISTER — update registration info\n" +
+            regCmd +
             "• HELP — show this message\n\n" +
             "*UI Grading Scale:*\n" +
             "70-100=A(5.0)  60-69=B(4.0)  50-59=C(3.0)\n" +
@@ -562,6 +649,7 @@ async function handleBotMessage(from, msg) {
     if (upper === 'NEW' || upper === 'NEW SEMESTER') {
         if (!paid) return upgradePrompt();
         state.semCtx = { type: null, expectedCount: null };
+        state.lastCourses = null;
         state.phase = PHASE.AWAITING_SEM_TYPE;
         saveState();
         return (
@@ -576,6 +664,7 @@ async function handleBotMessage(from, msg) {
         if (!['FIRST', '1', 'SECOND', '2', '1ST', '2ND'].includes(t))
             return "❌ Please reply with *First* or *Second*:";
         state.semCtx.type = (t === 'FIRST' || t === '1' || t === '1ST') ? 'First Semester' : 'Second Semester';
+        state.lastCourses = null;
         state.phase = PHASE.AWAITING_SEM_COUNT;
         saveState();
         return (
@@ -591,11 +680,17 @@ async function handleBotMessage(from, msg) {
         state.semCtx.expectedCount = count;
         state.phase = PHASE.REGISTERED;
         saveState();
+
+        const freshNote = state.semCtx.type === 'Second Semester'
+            ? "\n\n💡 *Note:* Enter *only* your Second Semester courses. These are recorded freshly and will *not* be added to your First Semester courses."
+            : "";
+
         return (
             `✅ Got it — *${count} courses* registered for *${state.semCtx.type}*.\n\n` +
             `Now send all ${count} courses (comma-separated):\n\n` +
             `_Introduction to Programming 72 3, General Studies 65 2, ..._\n\n` +
-            `*Format:* COURSE NAME SCORE UNIT`
+            `*Format:* COURSE NAME SCORE UNIT` +
+            freshNote
         );
     }
 
@@ -628,6 +723,7 @@ async function handleBotMessage(from, msg) {
     // ── Paid users: require semester context before accepting courses ───
     if (paid && !state.semCtx.expectedCount) {
         state.semCtx = { type: null, expectedCount: null };
+        state.lastCourses = null;
         state.phase = PHASE.AWAITING_SEM_TYPE;
         saveState();
         return (
@@ -669,7 +765,9 @@ async function handleBotMessage(from, msg) {
     state.lastActivity = now;
 
     const tooFast = state.recentAttempts.length >= 3;
-    const diffRec = isDifferentRecord(state.lastCourses, valid);
+    const isNewSemesterLogging = !!state.semCtx.type;
+    // When logging a new semester, fresh courses are expected and should not trigger anti-abuse diffRec
+    const diffRec = isNewSemesterLogging ? false : isDifferentRecord(state.lastCourses, valid);
     if (diffRec || tooFast) state.warningCount++;
     state.lastCourses = valid;
 
@@ -692,13 +790,21 @@ async function handleBotMessage(from, msg) {
             countNote = `⚠️ You declared *${declared} courses* but submitted *${submitted}*. Calculating with ${submitted}.\n\n`;
 
         const semLabel = state.semCtx.type || 'Semester';
-        state.semesters.push({
+        const semEntry = {
             totalPoints:     result.totalPoints,
             totalUnits:      result.totalUnits,
             timestamp:       now,
             semType:         semLabel,
-            registeredCount: declared || submitted
-        });
+            registeredCount: declared || submitted,
+            courses:         valid
+        };
+
+        const existingIndex = state.semesters.findIndex(s => s.semType === semLabel);
+        if (existingIndex >= 0) {
+            state.semesters[existingIndex] = semEntry;
+        } else {
+            state.semesters.push(semEntry);
+        }
 
         // Clear semester context after saving
         state.semCtx = { type: null, expectedCount: null };

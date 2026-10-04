@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Save, Loader2, BookOpen } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Loader2, BookOpen, RotateCcw, Sparkles } from 'lucide-react'
 import { saveSemester, CourseEntry } from './actions'
 
 interface EntryClientProps {
@@ -12,22 +12,54 @@ interface EntryClientProps {
   initialLevel?: number
   initialTerm?: number
   initialCourses?: any[]
+  savedSemesters?: Record<string, ClientCourseEntry[]>
 }
 
 type ClientCourseEntry = Omit<CourseEntry, 'score'> & { score: number | '' };
 
-export default function EntryClient({ studentName: _studentName, institutionName, gradeBoundaries, initialLevel, initialTerm, initialCourses }: EntryClientProps) {
+export default function EntryClient({ 
+  studentName: _studentName, 
+  institutionName, 
+  gradeBoundaries, 
+  initialLevel = 100, 
+  initialTerm = 1, 
+  initialCourses,
+  savedSemesters = {}
+}: EntryClientProps) {
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const [level, setLevel] = useState<number>(initialLevel || 100)
-  const [term, setTerm] = useState<number>(initialTerm || 1)
+  const [level, setLevel] = useState<number>(initialLevel)
+  const [term, setTerm] = useState<number>(initialTerm)
   
-  const [courses, setCourses] = useState<ClientCourseEntry[]>(
-    initialCourses && initialCourses.length > 0 
-      ? initialCourses 
-      : [{ code: '', units: 3, score: '' }]
-  )
+  // Courses are kept strictly per semester: if switching to 2nd semester, it starts fresh!
+  const [courses, setCourses] = useState<ClientCourseEntry[]>(() => {
+    if (initialCourses && initialCourses.length > 0) return initialCourses;
+    const key = `${initialLevel}-${initialTerm}`;
+    if (savedSemesters[key] && savedSemesters[key].length > 0) return savedSemesters[key];
+    return [{ code: '', units: 3, score: '' }];
+  })
+
+  // Whenever level or term changes, isolate the course list to that exact semester
+  const handleSemesterChange = (newLevel: number, newTerm: number) => {
+    setLevel(newLevel);
+    setTerm(newTerm);
+    setErrorMsg(null);
+
+    const key = `${newLevel}-${newTerm}`;
+    if (savedSemesters && savedSemesters[key] && savedSemesters[key].length > 0) {
+      // Load saved courses for THIS semester
+      setCourses(savedSemesters[key].map(c => ({ ...c })));
+    } else {
+      // Fresh semester! NEVER inherit or add to first semester courses!
+      setCourses([{ code: '', units: 3, score: '' }]);
+    }
+  };
+
+  const handleStartFresh = () => {
+    setCourses([{ code: '', units: 3, score: '' }]);
+    setErrorMsg(null);
+  };
 
   const handleAddCourse = () => {
     setCourses([...courses, { code: '', units: 3, score: '' }])
@@ -70,9 +102,17 @@ export default function EntryClient({ studentName: _studentName, institutionName
       return;
     }
 
+    // Check for duplicate course codes within the same semester
+    const normalizedCodes = courses.map(c => c.code.trim().toUpperCase());
+    const duplicates = normalizedCodes.filter((item, idx) => normalizedCodes.indexOf(item) !== idx);
+    if (duplicates.length > 0) {
+      setErrorMsg(`Duplicate course code found: "${duplicates[0]}". Each course should only be entered once.`);
+      return;
+    }
+
     // Convert score to a guaranteed number before sending to server
     const payloadCourses = courses.map(c => ({
-      code: c.code,
+      code: c.code.trim().toUpperCase(),
       units: c.units,
       score: Number(c.score)
     }))
@@ -121,8 +161,8 @@ export default function EntryClient({ studentName: _studentName, institutionName
                 <label className="text-sm font-semibold text-gray-700">Level</label>
                 <select 
                   value={level} 
-                  onChange={e => setLevel(Number(e.target.value))}
-                  className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  onChange={e => handleSemesterChange(Number(e.target.value), term)}
+                  className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all cursor-pointer font-medium"
                 >
                   {[100, 200, 300, 400, 500, 600, 700].map(l => (
                     <option key={l} value={l}>{l} Level</option>
@@ -133,8 +173,8 @@ export default function EntryClient({ studentName: _studentName, institutionName
                 <label className="text-sm font-semibold text-gray-700">Semester</label>
                 <select 
                   value={term} 
-                  onChange={e => setTerm(Number(e.target.value))}
-                  className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  onChange={e => handleSemesterChange(level, Number(e.target.value))}
+                  className="w-full bg-white/50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all cursor-pointer font-medium"
                 >
                   <option value={1}>1st Semester</option>
                   <option value={2}>2nd Semester</option>
@@ -142,13 +182,38 @@ export default function EntryClient({ studentName: _studentName, institutionName
               </div>
             </div>
 
+            {/* Fresh 2nd Semester Notification Banner */}
+            {term === 2 && (
+              <div className="flex items-start gap-3 p-4 bg-blue-50/80 border border-blue-200 rounded-2xl text-xs text-blue-900 leading-relaxed">
+                <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Fresh 2nd Semester Entry:</span> Enter only the courses you registered for <strong>Second Semester</strong>. These courses are recorded freshly and are not added to or combined with your First Semester courses.
+                </div>
+              </div>
+            )}
+
             <hr className="border-gray-200/60" />
 
             {/* Courses List */}
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-gray-900">Courses & Grades</h3>
-                <span className="text-sm font-medium text-gray-500">{courses.length} Course{courses.length !== 1 ? 's' : ''}</span>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {level}L • {term === 1 ? '1st' : '2nd'} Semester Courses
+                  </h3>
+                  <span className="text-xs font-medium text-gray-500">
+                    {courses.length} Course{courses.length !== 1 ? 's' : ''} in this semester
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStartFresh}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-gray-200 hover:border-red-200"
+                  title="Clear courses and start with a fresh blank course"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Start Fresh
+                </button>
               </div>
               
               <div className="space-y-3">

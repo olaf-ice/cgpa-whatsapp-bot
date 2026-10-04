@@ -81,6 +81,12 @@ SECURITY DEFINER
 AS $$
 DECLARE
     v_user_id UUID;
+    v_user_email TEXT;
+    v_existing_student RECORD;
+    v_is_exempt BOOLEAN := FALSE;
+    v_final_name VARCHAR;
+    v_final_matric VARCHAR;
+    v_final_course VARCHAR;
 BEGIN
     v_user_id := auth.uid();
     
@@ -88,14 +94,57 @@ BEGIN
         RAISE EXCEPTION 'Not authenticated';
     END IF;
 
-    INSERT INTO students (user_id, name, matric_number, institution_id, course_of_study, entry_level, current_level)
-    VALUES (v_user_id, p_name, p_matric, p_institution, p_course, p_level, p_level)
-    ON CONFLICT (user_id) DO UPDATE SET
-        name = EXCLUDED.name,
-        matric_number = EXCLUDED.matric_number,
-        institution_id = EXCLUDED.institution_id,
-        course_of_study = EXCLUDED.course_of_study,
-        entry_level = EXCLUDED.entry_level,
-        current_level = EXCLUDED.current_level;
+    -- Fetch user email from auth.users
+    SELECT email INTO v_user_email FROM auth.users WHERE id = v_user_id;
+
+    -- Check if student already exists
+    SELECT * INTO v_existing_student FROM students WHERE user_id = v_user_id;
+
+    IF v_existing_student.id IS NOT NULL THEN
+        -- Check exemption (Oladipupo Timileyin or admin)
+        IF LOWER(TRIM(COALESCE(v_user_email, ''))) IN ('timileyinsimeon@gmail.com', 'simeoncranier@gmail.com')
+           OR (LOWER(COALESCE(v_existing_student.name, '')) LIKE '%oladipupo%' AND LOWER(COALESCE(v_existing_student.name, '')) LIKE '%timileyin%')
+           OR (LOWER(COALESCE(p_name, '')) LIKE '%oladipupo%' AND LOWER(COALESCE(p_name, '')) LIKE '%timileyin%')
+           OR v_existing_student.is_admin = TRUE THEN
+            v_is_exempt := TRUE;
+        END IF;
+
+        IF v_is_exempt THEN
+            v_final_name := p_name;
+            v_final_matric := p_matric;
+            v_final_course := p_course;
+        ELSE
+            -- Preserve registered details if already set
+            IF v_existing_student.name IS NOT NULL AND v_existing_student.name <> 'Student' AND TRIM(v_existing_student.name) <> '' THEN
+                v_final_name := v_existing_student.name;
+            ELSE
+                v_final_name := p_name;
+            END IF;
+
+            IF v_existing_student.matric_number IS NOT NULL AND TRIM(v_existing_student.matric_number) <> '' THEN
+                v_final_matric := v_existing_student.matric_number;
+            ELSE
+                v_final_matric := p_matric;
+            END IF;
+
+            IF v_existing_student.course_of_study IS NOT NULL AND TRIM(v_existing_student.course_of_study) <> '' THEN
+                v_final_course := v_existing_student.course_of_study;
+            ELSE
+                v_final_course := p_course;
+            END IF;
+        END IF;
+
+        UPDATE students SET
+            name = v_final_name,
+            matric_number = v_final_matric,
+            institution_id = p_institution,
+            course_of_study = v_final_course,
+            current_level = p_level,
+            updated_at = NOW()
+        WHERE user_id = v_user_id;
+    ELSE
+        INSERT INTO students (user_id, name, matric_number, institution_id, course_of_study, entry_level, current_level)
+        VALUES (v_user_id, p_name, p_matric, p_institution, p_course, p_level, p_level);
+    END IF;
 END;
 $$;
