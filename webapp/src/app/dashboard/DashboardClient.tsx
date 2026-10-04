@@ -9,6 +9,7 @@ import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, M
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
 import CountUp from 'react-countup'
 import { toggleEmailReminders } from './actions'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const getThemeColors = (institution: string) => {
   const instLower = institution.toLowerCase();
@@ -273,7 +274,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
   }
 
   return (
-    <div className={`flex h-screen bg-gray-50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.bgGradient} overflow-hidden relative`}>
+    <div className={`flex h-screen bg-gray-50 dark:bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] ${theme.bgGradient} dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden relative transition-colors duration-300`}>
       
       {/* Hidden Brag Card for html2canvas */}
       <div id="brag-card" className={`hidden absolute left-[-9999px] top-[-9999px] w-[500px] h-[600px] bg-gradient-to-br ${theme.bragCardBg} p-10 rounded-[3rem] text-white overflow-hidden shadow-2xl`}>
@@ -304,46 +305,50 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
       </div>
 
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-64 bg-white/60 backdrop-blur-xl border-r border-gray-200/60 p-6 h-full shadow-sm z-20">
+      <aside className="hidden md:flex flex-col w-64 bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl border-r border-gray-200/60 dark:border-slate-800 p-6 h-full shadow-sm z-20 transition-colors duration-300">
         <div className="flex items-center gap-3 mb-10">
           <div className={`w-10 h-10 bg-gradient-to-br ${theme.iconBox} rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg ${theme.iconBoxShadow}`}>
             C
           </div>
-          <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.textGradient}`}>
+          <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.textGradient} dark:text-white`}>
             MyGPA.com.ng
           </span>
         </div>
 
         <nav className="flex-1 space-y-2">
           {studentData.isAdmin && (
-            <Link href="/admin" className="flex items-center gap-3 px-4 py-3 bg-red-50 text-red-700 rounded-xl font-bold transition-all mb-4 border border-red-100">
+            <Link href="/admin" className="flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 rounded-xl font-bold transition-all mb-4 border border-red-100 dark:border-red-900/50">
               <ShieldAlert className="w-5 h-5" />
               Admin Panel
             </Link>
           )}
-          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-700 rounded-xl font-semibold transition-all">
+          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-blue-600/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-xl font-semibold transition-all">
             <Home className="w-5 h-5" />
             Dashboard
           </Link>
-          <Link href="/dashboard/entry" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
+          <Link href="/dashboard/entry" className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white rounded-xl font-medium transition-all group">
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Log Semester
           </Link>
-          <Link href="/dashboard/target" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
+          <Link href="/dashboard/target" className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white rounded-xl font-medium transition-all group">
             <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Target Planner
           </Link>
-          <Link href="/onboarding" className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl font-medium transition-all group">
+          <Link href="/onboarding" className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white rounded-xl font-medium transition-all group">
             <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Edit Profile
           </Link>
 
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-gray-200/60">
+        <div className="mt-auto pt-6 border-t border-gray-200/60 dark:border-slate-800 flex flex-col gap-3">
+          <div className="flex items-center justify-between px-3 py-1">
+            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">Appearance</span>
+            <ThemeToggle />
+          </div>
           <button 
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 w-full text-gray-500 hover:bg-gray-100 hover:text-red-600 rounded-xl font-medium transition-all"
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 rounded-xl font-medium transition-all cursor-pointer"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
@@ -425,41 +430,42 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
 
           {/* Header */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Hello, {studentData.name.split(' ')[0]} 👋
                 </h1>
-                <p className="text-gray-500 font-medium mt-1">
+                <p className="text-gray-500 dark:text-slate-400 font-medium mt-1">
                   {studentData.institution} • {studentData.scale.toFixed(1)} Scale
                 </p>
                 <div className="flex flex-wrap items-center gap-3 mt-2">
                   {studentData.matricNumber && (
-                    <p className="text-blue-600 font-bold tracking-wider uppercase text-sm border-r border-gray-300 pr-3">
+                    <p className="text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase text-sm border-r border-gray-300 dark:border-slate-700 pr-3">
                       {studentData.matricNumber}
                     </p>
                   )}
-                  <p className="text-sm font-semibold text-gray-600">
-                    Registered: <span className="text-gray-900">{studentData.totalUnitsRegistered ?? 0}</span> Units
+                  <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+                    Registered: <span className="text-gray-900 dark:text-white">{studentData.totalUnitsRegistered ?? 0}</span> Units
                   </p>
-                  <p className="text-sm font-semibold text-emerald-600">
-                    Passed: <span className="text-emerald-700">{studentData.totalUnitsPassed ?? 0}</span> Units
+                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                    Passed: <span className="text-emerald-700 dark:text-emerald-300">{studentData.totalUnitsPassed ?? 0}</span> Units
                   </p>
                 </div>
                 {studentData.targetGraduationUnits ? (
                   <div className="mt-4 max-w-sm">
-                    <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <div className="flex justify-between text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       <span>Progress to Graduation</span>
-                      <span className="text-indigo-600">{studentData.totalUnitsPassed ?? 0} / {studentData.targetGraduationUnits} Units ({Math.round(((studentData.totalUnitsPassed ?? 0) / studentData.targetGraduationUnits) * 100)}%)</span>
+                      <span className="text-indigo-600 dark:text-indigo-400">{studentData.totalUnitsPassed ?? 0} / {studentData.targetGraduationUnits} Units ({Math.round(((studentData.totalUnitsPassed ?? 0) / studentData.targetGraduationUnits) * 100)}%)</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2">
                       <div className={`h-2 rounded-full ${studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0 ? 'bg-gradient-to-r from-orange-400 to-red-500' : 'bg-gradient-to-r from-indigo-500 to-blue-500'}`} style={{ width: `${Math.min(100, ((studentData.totalUnitsPassed ?? 0) / studentData.targetGraduationUnits) * 100)}%` }}></div>
                     </div>
                   </div>
                 ) : null}
               </div>
-              <div className="flex gap-2">
-                <Link href="/dashboard/transcript" className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all">
+              <div className="flex items-center gap-2 shrink-0">
+                <ThemeToggle />
+                <Link href="/dashboard/transcript" className="flex items-center gap-2 bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all">
                   View Records
                 </Link>
               </div>
@@ -471,7 +477,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           {/* Glassmorphic CGPA Card */}
           <motion.div 
             onMouseMove={handleMouseMove}
-            className="group relative overflow-hidden rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-blue-900/10 border border-white/50 bg-white/40 backdrop-blur-2xl"
+            className="group relative overflow-hidden rounded-[2rem] p-8 md:p-10 shadow-2xl shadow-blue-900/10 dark:shadow-black/40 border border-white/50 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 backdrop-blur-2xl transition-colors duration-300"
           >
             <motion.div
               className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 transition duration-300 group-hover:opacity-100"
@@ -490,24 +496,24 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div>
-                <p className="text-gray-600 font-semibold uppercase tracking-widest text-sm mb-2">Current CGPA</p>
+                <p className="text-gray-600 dark:text-slate-300 font-semibold uppercase tracking-widest text-sm mb-2">Current CGPA</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600 tracking-tight">
+                  <span className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600 dark:from-white dark:to-slate-300 tracking-tight">
                     <CountUp end={studentData.currentCGPA} decimals={2} duration={2} separator="," />
                   </span>
-                  <span className="text-2xl font-semibold text-gray-400">
+                  <span className="text-2xl font-semibold text-gray-400 dark:text-slate-500">
                     / {studentData.scale.toFixed(1)}
                   </span>
                 </div>
               </div>
               
-              <div className="px-6 py-4 bg-white/70 shadow-sm border border-white/60 rounded-3xl backdrop-blur-md flex flex-col items-center gap-1 min-w-[200px]">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest text-center w-full border-b border-gray-100 pb-2 mb-1">{studentData.courseOfStudy || 'Department'} Rank</span>
+              <div className="px-6 py-4 bg-white/70 dark:bg-slate-800/80 shadow-sm border border-white/60 dark:border-slate-700 rounded-3xl backdrop-blur-md flex flex-col items-center gap-1 min-w-[200px]">
+                <span className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest text-center w-full border-b border-gray-100 dark:border-slate-700 pb-2 mb-1">{studentData.courseOfStudy || 'Department'} Rank</span>
                 <div className="flex items-end gap-1 mt-1">
-                  <span className="font-black text-blue-700 text-3xl">#{studentData.numericRank}</span>
-                  <span className="font-semibold text-gray-400 text-lg mb-1">/ {studentData.totalPeers}</span>
+                  <span className="font-black text-blue-700 dark:text-blue-400 text-3xl">#{studentData.numericRank}</span>
+                  <span className="font-semibold text-gray-400 dark:text-slate-500 text-lg mb-1">/ {studentData.totalPeers}</span>
                 </div>
-                <span className={`text-[10px] font-bold ${theme.badgeText} mt-1 ${theme.badgeBg} px-2 py-0.5 rounded-md`}>Top {studentData.percentileRank}%</span>
+                <span className={`text-[10px] font-bold ${theme.badgeText} mt-1 ${theme.badgeBg} dark:bg-slate-700 dark:text-emerald-400 px-2 py-0.5 rounded-md`}>Top {studentData.percentileRank}%</span>
               </div>
             </div>
             
@@ -732,21 +738,21 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
       </main>
 
       {/* Bottom Navigation (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-200/60 z-30 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-200/60 dark:border-slate-800 z-30 pb-safe transition-colors duration-300">
         <div className="flex justify-around items-center p-3">
-          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-600">
+          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-600 dark:text-blue-400">
             <Home className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Home</span>
           </Link>
-          <Link href="/dashboard/entry" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
+          <Link href="/dashboard/entry" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <PlusCircle className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Log</span>
           </Link>
-          <Link href="/dashboard/target" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
+          <Link href="/dashboard/target" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <Target className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Target</span>
           </Link>
-          <Link href="/onboarding" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 transition-colors">
+          <Link href="/onboarding" className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <Settings className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Profile</span>
           </Link>
@@ -755,7 +761,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <span className="text-[10px] font-semibold">Sign Out</span>
           </button>
           {studentData.isAdmin && (
-            <Link href="/admin" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-600 transition-colors">
+            <Link href="/admin" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-400 transition-colors">
               <ShieldAlert className="w-6 h-6" />
               <span className="text-[10px] font-semibold">Admin</span>
             </Link>
@@ -765,36 +771,36 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
 
       {/* Carryover Reminder Modal */}
       {showCarryoverModal && studentData.outstandingCarryovers && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative"
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative border border-gray-100 dark:border-slate-800"
           >
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mb-6 mx-auto">
               <ShieldAlert className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-black text-center mb-2">Registration Reminder</h3>
-            <p className="text-gray-600 text-center mb-6">
-              Welcome back! Don't forget that you have <span className="font-bold text-red-600">{studentData.outstandingCarryovers.length} carryover course(s)</span> you MUST register for this semester to stay on track.
+            <h3 className="text-2xl font-black text-center mb-2 text-gray-900 dark:text-white">Registration Reminder</h3>
+            <p className="text-gray-600 dark:text-slate-300 text-center mb-6">
+              Welcome back! Don't forget that you have <span className="font-bold text-red-600 dark:text-red-400">{studentData.outstandingCarryovers.length} carryover course(s)</span> you MUST register for this semester to stay on track.
             </p>
             <div className="flex flex-col gap-3 mb-6">
               {studentData.outstandingCarryovers.filter(c => c.term === 1).length > 0 && (
-                <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                  <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">First Semester</p>
-                  <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 1).map(c => c.code).join(', ')}</p>
+                <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-xl border border-red-100 dark:border-red-900/40 text-center">
+                  <p className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1">First Semester</p>
+                  <p className="text-lg font-bold text-red-900 dark:text-red-200">{studentData.outstandingCarryovers.filter(c => c.term === 1).map(c => c.code).join(', ')}</p>
                 </div>
               )}
               {studentData.outstandingCarryovers.filter(c => c.term === 2).length > 0 && (
-                <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                  <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Second Semester</p>
-                  <p className="text-lg font-bold text-red-900">{studentData.outstandingCarryovers.filter(c => c.term === 2).map(c => c.code).join(', ')}</p>
+                <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-xl border border-red-100 dark:border-red-900/40 text-center">
+                  <p className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1">Second Semester</p>
+                  <p className="text-lg font-bold text-red-900 dark:text-red-200">{studentData.outstandingCarryovers.filter(c => c.term === 2).map(c => c.code).join(', ')}</p>
                 </div>
               )}
             </div>
             <button 
               onClick={() => setShowCarryoverModal(false)}
-              className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
+              className="w-full py-4 bg-gray-900 dark:bg-blue-600 text-white rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-blue-700 transition-colors cursor-pointer"
             >
               I got it, thanks!
             </button>
