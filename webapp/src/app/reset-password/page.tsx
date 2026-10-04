@@ -19,17 +19,30 @@ export default function ResetPasswordPage() {
     setError('')
     setMessage('')
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
-    })
+    try {
+      const trimmedEmail = email.trim()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+      })
 
-    if (resetError) {
-      setError(resetError.message)
-    } else {
-      setMessage('A password reset link has been sent to your email. Please check your inbox.')
+      if (resetError) {
+        if (resetError.message?.toLowerCase().includes('failed to fetch')) {
+          setError('Unable to connect to the authentication server. Please check your internet connection or verify that the Supabase project is active.')
+        } else {
+          setError(resetError.message)
+        }
+      } else {
+        setMessage('A password reset link has been sent to your email. Please check your inbox and spam folder.')
+      }
+    } catch (err: any) {
+      if (err?.message?.toLowerCase().includes('failed to fetch') || err?.name === 'TypeError') {
+        setError('Unable to connect to the authentication server. The backend database project may be paused in Supabase.')
+      } else {
+        setError(err?.message || 'Failed to send reset link. Please try again.')
+      }
+    } finally {
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
   }
 
   return (
