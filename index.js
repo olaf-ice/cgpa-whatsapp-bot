@@ -540,7 +540,7 @@ async function handleBotMessage(from, msg) {
             : "• LEVEL <lvl> — update your academic level (e.g. LEVEL 200)\n";
 
         const paidCmds = paid
-            ? "• CUMULATIVE — overall CGPA across all semesters\n• PROFILE — view your details & subscription\n• RESET — clear semester records\n"
+            ? "• COURSES — view all your registered courses & grades\n• CUMULATIVE — overall CGPA across all semesters\n• PROFILE — view your details & subscription\n• RESET — clear semester records\n"
             : "• PAY / UPGRADE — unlock full access (₦6,000 for 1st & 2nd semester)\n• PROFILE — view your registration details\n";
         return (
             "📚 *MyGPA Help*\n\n" +
@@ -643,6 +643,34 @@ async function handleBotMessage(from, msg) {
             `*Semester Breakdown:*\n${semLines}\n\n` +
             "Send *NEW* for a new semester, or RESET to clear all."
         );
+    }
+
+    if (upper === 'COURSES' || upper === 'MY COURSES' || upper === 'HISTORY') {
+        if (!paid) return upgradePrompt();
+        if (state.semesters.length === 0)
+            return (
+                "📭 No registered courses found.\n\nSend *NEW* to start your semester entry."
+            );
+
+        let response = "📚 *Your Registered Courses & Grades*\n\n";
+        state.semesters.forEach((s, i) => {
+            const gpa = (s.totalPoints / s.totalUnits).toFixed(2);
+            response += `*${i + 1}. ${s.semType || 'Semester'}* (CGPA: ${gpa}, ${s.totalUnits} units)\n`;
+            if (s.courses && s.courses.length > 0) {
+                s.courses.forEach(c => {
+                    const scoreStr = c.score !== null && c.score !== undefined ? `${c.score}%→` : '';
+                    response += `  • ${c.title} — ${scoreStr}${c.grade} (${c.unit} unit${c.unit !== 1 ? 's' : ''})\n`;
+                });
+            } else {
+                response += `  • ${s.registeredCount || s.totalUnits} course(s) logged\n`;
+            }
+            response += '\n';
+        });
+
+        const cum = computeCumulativeCGPA(state.semesters);
+        response += `📈 *Cumulative CGPA: ${cum}*\n\n`;
+        response += "Send *NEW* for a new semester, or RESET to clear.";
+        return response.trim();
     }
 
     // ── NEW SEMESTER trigger ────────────────────────────────────────────
