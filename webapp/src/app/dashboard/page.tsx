@@ -181,7 +181,9 @@ export default async function DashboardPage() {
     matricNumber: student.matric_number,
     institution: student.institution?.name || 'Unknown Institution',
     courseOfStudy: student.course_of_study,
-    scale: student.institution?.grading_scale || 5.0,
+    scale: (student.institution?.name?.toLowerCase().includes('ibadan') && student.institution?.name?.toLowerCase().includes('university'))
+      ? 5.0
+      : (student.institution?.grading_scale || 5.0),
     currentCGPA: Number(currentCGPA.toFixed(2)),
     trendData: trendData,
     phoneNumber: student.phone_number,

@@ -5,10 +5,17 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const supabase = await createClient()
   
    
-  const { data: institutions, error: _error } = await (supabase as any)
+  const { data: rawInstitutions, error: _error } = await (supabase as any)
     .from('institutions')
     .select('id, name, type, grading_scale')
     .order('name');
+
+  const institutions = (rawInstitutions || []).map((inst: any) => {
+    if (inst.name?.toLowerCase().includes('ibadan') && inst.name?.toLowerCase().includes('university')) {
+      return { ...inst, grading_scale: 5.0 }
+    }
+    return inst
+  });
     
   const queryParam = await searchParams;
   const referredBy = queryParam.ref || null;

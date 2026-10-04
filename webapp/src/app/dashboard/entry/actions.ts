@@ -21,7 +21,7 @@ export async function saveSemester(data: { level: number, term: number, courses:
   // 1. Get student and institution details
   const { data: student, error: studentError } = await (supabase as any)
     .from('students')
-    .select('id, institution:institutions(id, grade_boundaries)')
+    .select('id, institution:institutions(id, name, grade_boundaries)')
     .eq('user_id', user.id)
     .single()
 
@@ -29,7 +29,17 @@ export async function saveSemester(data: { level: number, term: number, courses:
     return { error: 'Student profile not found.' }
   }
 
-  const gradeBoundaries = student.institution.grade_boundaries;
+  let gradeBoundaries = student.institution?.grade_boundaries;
+  if (student.institution?.name?.toLowerCase().includes('ibadan') && student.institution?.name?.toLowerCase().includes('university')) {
+    gradeBoundaries = {
+      A: { min_score: 70, points: 5 },
+      B: { min_score: 60, points: 4 },
+      C: { min_score: 50, points: 3 },
+      D: { min_score: 45, points: 2 },
+      E: { min_score: 40, points: 1 },
+      F: { min_score: 0, points: 0 }
+    };
+  }
 
   // 2. Insert or Fetch Semester
   let semesterId: string;

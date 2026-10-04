@@ -38,6 +38,10 @@ export default async function TranscriptPage() {
     return a.term - b.term;
   }) || [];
 
+  if (student.institution?.name?.toLowerCase().includes('ibadan') && student.institution?.name?.toLowerCase().includes('university')) {
+    student.institution.grading_scale = 5.0;
+  }
+
   return (
     <TranscriptClient 
       student={student}

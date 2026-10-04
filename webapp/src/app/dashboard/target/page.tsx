@@ -56,7 +56,11 @@ export default async function TargetPage() {
       currentCGPA={currentCGPA}
       totalCreditUnits={totalCreditUnits}
       totalGradePoints={totalGradePoints}
-      scale={student.institution.grading_scale}
+      scale={
+        (student.institution?.name?.toLowerCase().includes('ibadan') && student.institution?.name?.toLowerCase().includes('university'))
+          ? 5.0
+          : (student.institution?.grading_scale || 5.0)
+      }
       email={email}
     />
   )
