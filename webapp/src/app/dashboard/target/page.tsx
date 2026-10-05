@@ -29,10 +29,6 @@ export default async function TargetPage() {
   }
 
   const email = user.email?.toLowerCase().trim() || '';
-  const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
-  if (!student.has_paid && !student.is_admin && !isSimeon) {
-    redirect('/dashboard') // Route back to dashboard to hit the paywall
-  }
 
   // Calculate Cumulative TCU (Total Credit Units) and TGP (Total Grade Points)
   let totalCreditUnits = 0;

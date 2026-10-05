@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import DashboardClient from './DashboardClient'
-import LockedDashboardWrapper from './LockedDashboardWrapper'
 
 
 export default async function DashboardPage() {
@@ -203,33 +202,6 @@ export default async function DashboardPage() {
     totalUnitsRegistered: totalCreditUnits,
     totalUnitsPassed,
     targetGraduationUnits: student.target_graduation_units
-  }
-
-  if (!student.has_paid) {
-    const email = user.email?.toLowerCase().trim() || '';
-    const isSimeon = email === 'simeoncranier@gmail.com' || email === 'timileyinsimeon@gmail.com';
-    if (!student.is_admin && !isSimeon) {
-      // Calculate dynamic pricing based on institution type
-      let paymentAmount = 2000; // default
-      const instType = student.institution?.type || '';
-      
-      if (instType === 'Federal University') {
-        paymentAmount = 3000;
-      } else if (instType === 'State University') {
-        paymentAmount = 3000;
-      } else if (instType === 'Private University') {
-        paymentAmount = 5000;
-      } else if (instType === 'Polytechnic') {
-        paymentAmount = 2500;
-      }
-
-      // UI Students override
-      if ((student.institution?.name || '').toLowerCase().includes('ibadan')) {
-        paymentAmount = 6000;
-      }
-
-      return <LockedDashboardWrapper email={user.email || ''} name={student.name} amount={paymentAmount} />
-    }
   }
 
   return <DashboardClient studentData={liveStudentData} />
