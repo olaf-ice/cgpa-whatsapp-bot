@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, Mail, ShieldAlert, Users } from 'lucide-react'
+import { Home, Target, PlusCircle, Settings, Crown, LogOut, TrendingUp, Brain, Mail, ShieldAlert, Users, Zap, BookOpen } from 'lucide-react'
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion'
 import CountUp from 'react-countup'
 import { toggleEmailReminders } from './actions'
 import ThemeToggle from '@/components/ThemeToggle'
+import QuickSyncModal from '@/components/QuickSyncModal'
 
 const getThemeColors = (institution: string) => {
   const instLower = institution.toLowerCase();
@@ -124,6 +125,7 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
   const [emailEnabled, setEmailEnabled] = useState(studentData.emailRemindersEnabled ?? true)
   const [isCapturing, setIsCapturing] = useState(false)
   const [showCarryoverModal, setShowCarryoverModal] = useState(false)
+  const [showQuickSync, setShowQuickSync] = useState(false)
 
   useEffect(() => {
     const hasCarryovers = studentData.outstandingCarryovers && studentData.outstandingCarryovers.length > 0;
@@ -334,6 +336,10 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
             <Target className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Target Planner
           </Link>
+          <Link href="/dashboard/registration-planner" className="flex items-center gap-3 px-4 py-3 text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl font-bold transition-all border border-indigo-100 dark:border-indigo-900/40 group">
+            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            UI Course Planner
+          </Link>
           <Link href="/onboarding" className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white rounded-xl font-medium transition-all group">
             <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Edit Profile
@@ -427,6 +433,44 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
              </div>
           </div>
           )}
+
+          {/* Quick Actions Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setShowQuickSync(true)}
+              className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 hover:border-amber-500/60 dark:bg-amber-950/20 text-left transition-all hover:scale-[1.01] cursor-pointer shadow-sm group"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 group-hover:rotate-6 transition-transform">
+                <Zap className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  Sync School Portal <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold">Instant</span>
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                  Import CGPA & carryovers directly without entering past courses.
+                </p>
+              </div>
+            </button>
+
+            <Link
+              href="/dashboard/registration-planner"
+              className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-blue-500/5 to-transparent border border-indigo-500/30 hover:border-indigo-500/60 dark:bg-indigo-950/20 text-left transition-all hover:scale-[1.01] shadow-sm group"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30 group-hover:rotate-6 transition-transform">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  UI Registration Advisor <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-extrabold">DLC 23/24</span>
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                  Check semester unit caps (Min/Max), prerequisite chains & fit carryovers.
+                </p>
+              </div>
+            </Link>
+          </div>
 
           {/* Header */}
           <div className="flex flex-col gap-1">
@@ -807,6 +851,13 @@ export default function DashboardClient({ studentData }: DashboardClientProps) {
           </motion.div>
         </div>
       )}
+      {/* Quick Sync Modal */}
+      <QuickSyncModal
+        isOpen={showQuickSync}
+        onClose={() => setShowQuickSync(false)}
+        currentScale={studentData.scale}
+        defaultCGPA={studentData.currentCGPA}
+      />
     </div>
   )
 }

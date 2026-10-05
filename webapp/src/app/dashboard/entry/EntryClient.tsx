@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Save, Loader2, BookOpen, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Loader2, BookOpen, RotateCcw, Sparkles, Zap } from 'lucide-react'
 import { saveSemester, CourseEntry } from './actions'
+import QuickSyncModal from '@/components/QuickSyncModal'
 
 interface EntryClientProps {
   studentName: string
@@ -28,6 +29,7 @@ export default function EntryClient({
 }: EntryClientProps) {
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [showQuickSync, setShowQuickSync] = useState(false)
 
   const [level, setLevel] = useState<number>(initialLevel)
   const [term, setTerm] = useState<number>(initialTerm)
@@ -142,6 +144,29 @@ export default function EntryClient({
           <div className="w-14 h-14 bg-white/60 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-sm border border-white">
             <BookOpen className="w-7 h-7 text-blue-600" />
           </div>
+        </div>
+
+        {/* Portal Sync Choice Banner */}
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+              <Zap className="w-5 h-5 fill-current" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Have your CGPA from the School Portal?</h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Don&apos;t waste time typing past courses. Sync your current CGPA and carryovers in 15 seconds.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowQuickSync(true)}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            Quick Sync Instead
+          </button>
         </div>
 
         {/* Main Form Card */}
@@ -315,6 +340,12 @@ export default function EntryClient({
         </div>
 
       </div>
+
+      <QuickSyncModal
+        isOpen={showQuickSync}
+        onClose={() => setShowQuickSync(false)}
+        currentScale={5.0}
+      />
     </div>
   )
 }

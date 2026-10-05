@@ -82,9 +82,10 @@ export default async function DashboardPage() {
         });
       }
 
-      const semGPA = semUnits > 0 ? (semPoints / semUnits) : 0;
       let levelLabel = `${sem.level}L`;
-      if (student.institution?.type === 'Polytechnic') {
+      if (sem.level === 0) {
+        levelLabel = 'Portal Baseline';
+      } else if (student.institution?.type === 'Polytechnic') {
         if (sem.level === 100) levelLabel = 'ND 1';
         else if (sem.level === 200) levelLabel = 'ND 2';
         else if (sem.level === 300) levelLabel = 'HND 1';
@@ -92,16 +93,18 @@ export default async function DashboardPage() {
       }
 
       trendData.push({
-        semester: `${levelLabel} ${sem.term === 1 ? '1st' : sem.term === 2 ? '2nd' : sem.term + 'th'} Semester`,
+        semester: sem.level === 0 ? 'Portal Baseline' : `${levelLabel} ${sem.term === 1 ? '1st' : sem.term === 2 ? '2nd' : sem.term + 'th'} Semester`,
         gpa: Number(semGPA.toFixed(2))
       });
     });
   } else {
     // New user with no grades logged yet
-    trendData.push({ semester: 'Current', gpa: 0.0 });
+    trendData.push({ semester: 'Current', gpa: student.current_cgpa ? Number(student.current_cgpa) : 0.0 });
   }
 
-  const currentCGPA = totalCreditUnits > 0 ? (totalGradePoints / totalCreditUnits) : 0.0;
+  const currentCGPA = totalCreditUnits > 0 
+    ? (totalGradePoints / totalCreditUnits) 
+    : (student.current_cgpa ? Number(student.current_cgpa) : 0.0);
   
   // Calculate outstanding carryovers
   const outstandingCarryovers: { code: string, level: number, term: number, units: number }[] = [];
